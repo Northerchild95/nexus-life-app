@@ -122,9 +122,19 @@ export function useFeatureActions() {
       const feature = await featureRepository.getById(id);
       if (!feature) throw new Error('Feature not found');
 
+      // Validación: verificar si ya completó el objetivo (para hábitos con contador)
+      if (feature.currentCount >= feature.targetCount) {
+        const message = `Ya completaste tu objetivo de ${feature.targetCount} veces para este hábito`;
+        setState({ isLoading: false, error: message });
+        throw new Error(message);
+      }
+
+      const newCount = feature.currentCount + 1;
+      const isCompleted = newCount >= feature.targetCount;
+
       const updated = await updateFeatureUseCase.execute(id, {
-        // Update logic specific to completion
-        status: 'completed',
+        currentCount: newCount,
+        status: isCompleted ? 'completed' : 'active',
       });
       setState({ isLoading: false, error: null });
       return updated;

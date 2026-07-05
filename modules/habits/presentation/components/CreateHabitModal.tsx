@@ -19,11 +19,20 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
   const [frequency, setFrequency] = useState<HabitFrequency>('daily');
   const [targetCount, setTargetCount] = useState('1');
   const [error, setError] = useState<string | null>(null);
+  const [targetCountError, setTargetCountError] = useState<string | null>(null);
   const { createHabit, isLoading } = useCreateHabit();
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
+    
+    const parsedTargetCount = parseInt(targetCount, 10);
+    if (isNaN(parsedTargetCount) || parsedTargetCount < 1) {
+      setTargetCountError('El número de días debe ser al menos 1');
+      return;
+    }
+    
     setError(null);
+    setTargetCountError(null);
     Keyboard.dismiss();
 
     try {
@@ -31,13 +40,14 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
         title: title.trim(),
         description: description.trim() || undefined,
         frequency,
-        targetCount: parseInt(targetCount, 10) || 1,
+        targetCount: parsedTargetCount,
       });
       setTitle('');
       setDescription('');
       setFrequency('daily');
       setTargetCount('1');
       setError(null);
+      setTargetCountError(null);
       onSuccess();
       onClose();
     } catch (error) {
@@ -52,6 +62,7 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
     setFrequency('daily');
     setTargetCount('1');
     setError(null);
+    setTargetCountError(null);
     onClose();
   };
 
@@ -109,6 +120,7 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
               value={targetCount}
               onChangeText={setTargetCount}
               placeholder="1"
+              error={targetCountError || undefined}
             />
 
             <View className="flex-row gap-3 pt-2">

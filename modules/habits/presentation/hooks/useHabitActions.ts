@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 
-import { UpdateHabitUseCase, DeleteHabitUseCase } from '@/modules/habits/domain/useCases';
 import { createHabitsRepository } from '@/modules/habits/data/repositories';
 import type { UpdateHabitParams } from '@/modules/habits/domain/repositories';
+import { DeleteHabitUseCase, UpdateHabitUseCase } from '@/modules/habits/domain/useCases';
 
 type State = {
   isLoading: boolean;
@@ -50,8 +50,18 @@ export function useHabitActions() {
       const habit = await habitsRepository.getById(id);
       if (!habit) throw new Error('Habit not found');
 
+      if (habit.currentCount >= habit.targetCount) {
+        const message = `Ya completaste tu objetivo de ${habit.targetCount} veces para este hábito`;
+        setState({ isLoading: false, error: message });
+        throw new Error(message);
+      }
+
+      const newCount = habit.currentCount + 1;
+      const isCompleted = newCount >= habit.targetCount;
+
       const updated = await updateHabitUseCase.execute(id, {
-        currentCount: habit.currentCount + 1,
+        currentCount: newCount,
+        status: isCompleted ? 'completed' : 'active',
       });
       setState({ isLoading: false, error: null });
       return updated;

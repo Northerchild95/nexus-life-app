@@ -43,6 +43,16 @@ export function CreateFeatureModal({ visible, onClose, onSuccess }: Props) {
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
+    
+    // Validación para campos numéricos (ej: días, cantidad)
+    if (targetCount) {
+      const parsed = parseInt(targetCount, 10);
+      if (isNaN(parsed) || parsed < 1) {
+        setError('El valor debe ser al menos 1');
+        return;
+      }
+    }
+    
     setError(null);
     Keyboard.dismiss(); // Siempre cerrar teclado
 

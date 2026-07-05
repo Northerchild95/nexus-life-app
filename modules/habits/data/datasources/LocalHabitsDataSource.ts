@@ -11,7 +11,7 @@ export class LocalHabitsDataSource {
     const newHabit: Habit = {
       id: Date.now().toString(),
       ...params,
-      currentCount: 0,
+      currentCount: 1,
       status: 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
