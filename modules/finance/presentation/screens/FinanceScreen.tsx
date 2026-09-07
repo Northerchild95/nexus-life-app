@@ -6,7 +6,7 @@ import { ScreenContainer } from '@/core/components/ScreenContainer';
 
 export function FinanceScreen() {
   return (
-    <ScreenContainer scrollable contentClassName="gap-4">
+    <ScreenContainer scrollable contentClassName="gap-4 mb-8">
       <Header title="Finance" subtitle="Make spending visible and intentional." />
 
       <Card className="gap-4 bg-slate-900">

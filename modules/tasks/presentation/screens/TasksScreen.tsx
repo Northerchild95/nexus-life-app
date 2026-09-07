@@ -6,7 +6,7 @@ import { ScreenContainer } from '@/core/components/ScreenContainer';
 
 export function TasksScreen() {
   return (
-    <ScreenContainer scrollable contentClassName="gap-4">
+    <ScreenContainer scrollable contentClassName="gap-4 mb-8">
       <Header title="Tasks" subtitle="Turn priorities into executable next steps." />
 
       <Card className="gap-4">

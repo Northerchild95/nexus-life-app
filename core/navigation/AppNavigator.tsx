@@ -1,3 +1,4 @@
+import { NavigationContainer } from '@react-navigation/native';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AuthNavigator } from '@/core/navigation/AuthNavigator';
@@ -17,6 +18,8 @@ export function AppNavigator() {
   }
 
   return (
-    isAuthenticated ? <MainTabsNavigator /> : <AuthNavigator />
+    <NavigationContainer>
+      {isAuthenticated ? <MainTabsNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
   );
 }
