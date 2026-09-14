@@ -8,8 +8,10 @@ export type DashboardMetric = {
 };
 
 export type DashboardFocus = {
+  id: string;
   title: string;
   durationLabel: string;
+  duration: number; // in milliseconds
   description: string;
   ritualTitle: string;
   ritualDescription: string;

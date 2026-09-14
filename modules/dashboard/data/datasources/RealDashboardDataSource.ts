@@ -35,8 +35,10 @@ export class RealDashboardDataSource {
       userName: params.userName || 'Usuario',
       date: params.date,
       focus: {
+        id: 'daily_focus',
         title: 'Tu enfoque de hoy',
         durationLabel: activeTasks.length > 0 ? `${activeTasks.length} tareas` : 'Sin tareas',
+        duration: 25 * 60 * 1000, // 25 minutes in milliseconds
         description: activeTasks.length > 0 
           ? `Tienes ${activeTasks.length} tareas pendientes` 
           : 'Sin tareas pendientes',

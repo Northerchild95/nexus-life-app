@@ -7,9 +7,10 @@ import type { DashboardFocus } from '@/modules/dashboard/domain/entities';
 
 type Props = {
   focus: DashboardFocus;
+  onPress: () => void;
 };
 
-export function FocusCard({ focus }: Props) {
+export function FocusCard({ focus, onPress }: Props) {
   return (
     <Card variant="elevated" className="overflow-hidden bg-ink p-0">
       <View className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-brand-500/25" />
@@ -49,7 +50,7 @@ export function FocusCard({ focus }: Props) {
           </View>
         </View>
 
-        <Button label="Empezar ahora" onPress={() => {}} variant="secondary" />
+        <Button label="Empezar ahora" onPress={onPress} variant="secondary" />
       </View>
     </Card>
   );

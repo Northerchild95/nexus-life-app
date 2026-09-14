@@ -1,17 +1,20 @@
-import { ConfirmDialog, ScreenContainer } from '@/core/components';
+import { ConfirmDialog, FocusAlert, ScreenContainer, SoundPlayer } from '@/core/components';
 import {
   DailySummary,
   FocusCard,
+  FocusModeModal,
   GreetingHeader,
   InsightsPanel,
   QuickActions,
-  TodayAgenda,
+  TodayAgenda
 } from '@/modules/dashboard/presentation/components';
-import { useDashboardSummary } from '@/modules/dashboard/presentation/hooks';
+import { useDashboardSummary } from '@/modules/dashboard/presentation/hooks/useDashboardSummary';
+import { useFocusSession } from '@/modules/dashboard/presentation/hooks/useFocusSession';
 import { CreateHabitModal, EditHabitModal } from '@/modules/habits/presentation/components';
-import { useHabitActions } from '@/modules/habits/presentation/hooks';
+import { useHabitActions } from '@/modules/habits/presentation/hooks/useHabitActions';
 import { CreateTaskModal, EditTaskModal } from '@/modules/tasks/presentation/components';
-import { useTaskActions } from '@/modules/tasks/presentation/hooks';
+import { useTaskActions } from '@/modules/tasks/presentation/hooks/useTaskActions';
+import { useAudioPlayer } from 'expo-audio';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
@@ -26,9 +29,24 @@ export function DashboardScreen() {
   const [habitToEditId, setHabitToEditId] = useState<string | null>(null);
   const [isDeleteHabitDialogVisible, setIsDeleteHabitDialogVisible] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
+  const [isFocusModeVisible, setIsFocusModeVisible] = useState(false);
+  const [playSound, setPlaySound] = useState(false);
+  const audioPlayer = useAudioPlayer(require('@/assets/sounds/complete.mp3'));
+  const pauseAudioPlayer = useAudioPlayer(require('@/assets/sounds/pause.mp3'));
   const { error, isError, isLoading, refresh, summary } = useDashboardSummary();
   const { completeTask, deleteTask } = useTaskActions();
   const { completeHabit, deleteHabit } = useHabitActions();
+  const {
+    session,
+    elapsedTime,
+    remainingTime,
+    startSession,
+    pauseSession,
+    resumeSession,
+    completeSession,
+    showCompletionAlert,
+    closeCompletionAlert,
+  } = useFocusSession();
 
   const handleCompleteTask = async (id: string) => {
     try {
@@ -114,6 +132,64 @@ export function DashboardScreen() {
     setHabitToEditId(null);
   };
 
+  const handleStartFocus = async () => {
+    if (!summary?.focus) return;
+    
+    try {
+      // If there's already an active session, just open the modal
+      if (session) {
+        setIsFocusModeVisible(true);
+        return;
+      }
+      
+      await startSession(summary.focus.id, summary.focus.title, summary.focus.duration);
+      setIsFocusModeVisible(true);
+    } catch (error) {
+      console.error('Error starting focus session:', error);
+    }
+  };
+
+  const handlePauseFocus = async () => {
+    try {
+      await pauseSession();
+    } catch (error) {
+      console.error('Error pausing focus session:', error);
+    }
+  };
+
+  const handleResumeFocus = async () => {
+    try {
+      await resumeSession();
+    } catch (error) {
+      console.error('Error resuming focus session:', error);
+    }
+  };
+
+  const handleCompleteFocus = async () => {
+    try {
+      await completeSession();
+      // Play sound
+      triggerSound();
+      // Close modal after a short delay to show completion
+      setTimeout(() => {
+        setIsFocusModeVisible(false);
+        refresh();
+      }, 1500);
+    } catch (error) {
+      console.error('Error completing focus session:', error);
+    }
+  };
+
+  const handleCloseFocusMode = () => {
+    setIsFocusModeVisible(false);
+  };
+
+  const triggerSound = () => {
+    console.log('🔊 Triggering sound...');
+    setPlaySound(true);
+    setTimeout(() => setPlaySound(false), 100);
+  };
+
   if (isLoading && !summary) {
     return (
       <ScreenContainer contentClassName="items-center justify-center gap-3">
@@ -142,68 +218,94 @@ export function DashboardScreen() {
   }
 
   return (
-    <ScreenContainer scrollable contentClassName="gap-5 pb-36">
-      <GreetingHeader userName={summary?.userName} />
-      {summary ? <FocusCard focus={summary.focus} /> : null}
-      {summary ? <DailySummary metrics={summary.metrics} /> : null}
-      {summary ? (
-        <TodayAgenda
-          items={summary.agenda}
-          onCompleteTask={handleCompleteTask}
-          onDeleteTask={handleDeleteTask}
-          onEditTask={handleEditTask}
-          onCompleteHabit={handleCompleteHabit}
-          onDeleteHabit={handleDeleteHabit}
-          onEditHabit={handleEditHabit}
+    <>
+      <ScreenContainer scrollable contentClassName="gap-5 pb-36">
+        <GreetingHeader userName={summary?.userName} />
+        {summary ? <FocusCard focus={summary.focus} onPress={handleStartFocus} /> : null}
+        {summary ? <DailySummary metrics={summary.metrics} /> : null}
+        {summary ? (
+          <TodayAgenda
+            items={summary.agenda}
+            onCompleteTask={handleCompleteTask}
+            onDeleteTask={handleDeleteTask}
+            onEditTask={handleEditTask}
+            onCompleteHabit={handleCompleteHabit}
+            onDeleteHabit={handleDeleteHabit}
+            onEditHabit={handleEditHabit}
+          />
+        ) : null}
+        <QuickActions
+          onCreateTask={() => setIsCreateTaskModalVisible(true)}
+          onCreateHabit={() => setIsCreateHabitModalVisible(true)}
         />
-      ) : null}
-      <QuickActions
-        onCreateTask={() => setIsCreateTaskModalVisible(true)}
-        onCreateHabit={() => setIsCreateHabitModalVisible(true)}
+        <InsightsPanel />
+        <CreateTaskModal
+          visible={isCreateTaskModalVisible}
+          onClose={() => setIsCreateTaskModalVisible(false)}
+          onSuccess={refresh}
+        />
+        <ConfirmDialog
+          visible={isDeleteDialogVisible}
+          title="Eliminar tarea"
+          message="¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={confirmDeleteTask}
+          onCancel={cancelDeleteTask}
+          destructive
+        />
+        <EditTaskModal
+          visible={isEditTaskModalVisible}
+          taskId={taskToEditId}
+          onClose={closeEditModal}
+          onSuccess={refresh}
+        />
+        <CreateHabitModal
+          visible={isCreateHabitModalVisible}
+          onClose={() => setIsCreateHabitModalVisible(false)}
+          onSuccess={refresh}
+        />
+        <EditHabitModal
+          visible={isEditHabitModalVisible}
+          habitId={habitToEditId}
+          onClose={closeEditHabitModal}
+          onSuccess={refresh}
+        />
+        <ConfirmDialog
+          visible={isDeleteHabitDialogVisible}
+          title="Eliminar hábito"
+          message="¿Estás seguro de que quieres eliminar este hábito? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={confirmDeleteHabit}
+          onCancel={cancelDeleteHabit}
+          destructive
+        />
+      </ScreenContainer>
+      <FocusModeModal
+        visible={isFocusModeVisible}
+        session={session}
+        elapsedTime={elapsedTime}
+        remainingTime={remainingTime}
+        onPause={handlePauseFocus}
+        onResume={handleResumeFocus}
+        onComplete={handleCompleteFocus}
+        onClose={handleCloseFocusMode}
+        audioPlayer={audioPlayer}
+        pauseAudioPlayer={pauseAudioPlayer}
       />
-      <InsightsPanel />
-      <CreateTaskModal
-        visible={isCreateTaskModalVisible}
-        onClose={() => setIsCreateTaskModalVisible(false)}
-        onSuccess={refresh}
+      <FocusAlert
+        visible={showCompletionAlert}
+        title="¡Sesión completada!"
+        message="Has completado tu sesión de focus exitosamente."
+        onConfirm={closeCompletionAlert}
       />
-      <ConfirmDialog
-        visible={isDeleteDialogVisible}
-        title="Eliminar tarea"
-        message="¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        onConfirm={confirmDeleteTask}
-        onCancel={cancelDeleteTask}
-        destructive
-      />
-      <EditTaskModal
-        visible={isEditTaskModalVisible}
-        taskId={taskToEditId}
-        onClose={closeEditModal}
-        onSuccess={refresh}
-      />
-      <CreateHabitModal
-        visible={isCreateHabitModalVisible}
-        onClose={() => setIsCreateHabitModalVisible(false)}
-        onSuccess={refresh}
-      />
-      <EditHabitModal
-        visible={isEditHabitModalVisible}
-        habitId={habitToEditId}
-        onClose={closeEditHabitModal}
-        onSuccess={refresh}
-      />
-      <ConfirmDialog
-        visible={isDeleteHabitDialogVisible}
-        title="Eliminar hábito"
-        message="¿Estás seguro de que quieres eliminar este hábito? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        onConfirm={confirmDeleteHabit}
-        onCancel={cancelDeleteHabit}
-        destructive
-      />
-    </ScreenContainer>
+      {playSound && (
+        <SoundPlayer
+          soundFile="complete.mp3"
+          onPlayComplete={() => setPlaySound(false)}
+        />
+      )}
+    </>
   );
 }
