@@ -7,6 +7,7 @@ type Props = {
   onChangeText: (value: string) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'decimal-pad';
   error?: string;
   helperText?: string;
   testID?: string;
@@ -20,6 +21,7 @@ export function Input({
   onChangeText,
   placeholder,
   secureTextEntry,
+  keyboardType,
   error,
   helperText,
   testID,
@@ -46,6 +48,7 @@ export function Input({
           placeholder={placeholder}
           placeholderTextColor="#94a3b8"
           secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
           testID={testID}
           value={value}
         />

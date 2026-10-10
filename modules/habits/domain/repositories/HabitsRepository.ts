@@ -14,6 +14,7 @@ export interface UpdateHabitParams {
   targetCount?: number;
   currentCount?: number;
   status?: HabitStatus;
+  lastCompletedDate?: string;
 }
 
 export interface GetHabitsParams {

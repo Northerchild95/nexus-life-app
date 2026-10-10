@@ -1,15 +1,17 @@
 import { ConfirmDialog, FocusAlert, ScreenContainer, SoundPlayer } from '@/core/components';
 import {
-  DailySummary,
-  FocusCard,
-  FocusModeModal,
-  GreetingHeader,
-  InsightsPanel,
-  QuickActions,
-  TodayAgenda
+    DailySummary,
+    FocusCard,
+    FocusModeModal,
+    GreetingHeader,
+    InsightsPanel,
+    QuickActions,
+    TodayAgenda
 } from '@/modules/dashboard/presentation/components';
 import { useDashboardSummary } from '@/modules/dashboard/presentation/hooks/useDashboardSummary';
 import { useFocusSession } from '@/modules/dashboard/presentation/hooks/useFocusSession';
+import { CreateExpenseModal, EditExpenseModal } from '@/modules/finance/presentation/components';
+import { useExpenseActions } from '@/modules/finance/presentation/hooks';
 import { CreateHabitModal, EditHabitModal } from '@/modules/habits/presentation/components';
 import { useHabitActions } from '@/modules/habits/presentation/hooks/useHabitActions';
 import { CreateTaskModal, EditTaskModal } from '@/modules/tasks/presentation/components';
@@ -29,6 +31,11 @@ export function DashboardScreen() {
   const [habitToEditId, setHabitToEditId] = useState<string | null>(null);
   const [isDeleteHabitDialogVisible, setIsDeleteHabitDialogVisible] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
+  const [isCreateExpenseModalVisible, setIsCreateExpenseModalVisible] = useState(false);
+  const [isEditExpenseModalVisible, setIsEditExpenseModalVisible] = useState(false);
+  const [expenseToEditId, setExpenseToEditId] = useState<string | null>(null);
+  const [isDeleteExpenseDialogVisible, setIsDeleteExpenseDialogVisible] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   const [isFocusModeVisible, setIsFocusModeVisible] = useState(false);
   const [playSound, setPlaySound] = useState(false);
   const audioPlayer = useAudioPlayer(require('@/assets/sounds/complete.mp3'));
@@ -36,6 +43,7 @@ export function DashboardScreen() {
   const { error, isError, isLoading, refresh, summary } = useDashboardSummary();
   const { completeTask, deleteTask } = useTaskActions();
   const { completeHabit, deleteHabit } = useHabitActions();
+  const { deleteExpense } = useExpenseActions();
   const {
     session,
     elapsedTime,
@@ -130,6 +138,39 @@ export function DashboardScreen() {
   const closeEditHabitModal = () => {
     setIsEditHabitModalVisible(false);
     setHabitToEditId(null);
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    setExpenseToDelete(id);
+    setIsDeleteExpenseDialogVisible(true);
+  };
+
+  const confirmDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      await deleteExpense(expenseToDelete);
+      refresh();
+      setIsDeleteExpenseDialogVisible(false);
+      setExpenseToDelete(null);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+    }
+  };
+
+  const cancelDeleteExpense = () => {
+    setIsDeleteExpenseDialogVisible(false);
+    setExpenseToDelete(null);
+  };
+
+  const handleEditExpense = (id: string) => {
+    setExpenseToEditId(id);
+    setIsEditExpenseModalVisible(true);
+  };
+
+  const closeEditExpenseModal = () => {
+    setIsEditExpenseModalVisible(false);
+    setExpenseToEditId(null);
   };
 
   const handleStartFocus = async () => {
@@ -237,6 +278,7 @@ export function DashboardScreen() {
         <QuickActions
           onCreateTask={() => setIsCreateTaskModalVisible(true)}
           onCreateHabit={() => setIsCreateHabitModalVisible(true)}
+          onCreateExpense={() => setIsCreateExpenseModalVisible(true)}
         />
         <InsightsPanel />
         <CreateTaskModal
@@ -279,6 +321,27 @@ export function DashboardScreen() {
           cancelText="Cancelar"
           onConfirm={confirmDeleteHabit}
           onCancel={cancelDeleteHabit}
+          destructive
+        />
+        <CreateExpenseModal
+          visible={isCreateExpenseModalVisible}
+          onClose={() => setIsCreateExpenseModalVisible(false)}
+          onSuccess={refresh}
+        />
+        <EditExpenseModal
+          visible={isEditExpenseModalVisible}
+          expenseId={expenseToEditId}
+          onClose={closeEditExpenseModal}
+          onSuccess={refresh}
+        />
+        <ConfirmDialog
+          visible={isDeleteExpenseDialogVisible}
+          title="Eliminar gasto"
+          message="¿Estás seguro de que quieres eliminar este gasto? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          onConfirm={confirmDeleteExpense}
+          onCancel={cancelDeleteExpense}
           destructive
         />
       </ScreenContainer>

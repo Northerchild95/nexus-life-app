@@ -5,6 +5,20 @@ import type { CreateHabitParams, UpdateHabitParams } from '@/modules/habits/doma
 
 const HABITS_KEY = '@nexus_habits';
 
+const isSameDay = (date1: string, date2: string): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+const isToday = (date: string): boolean => {
+  return isSameDay(date, new Date().toISOString());
+};
+
 export class LocalHabitsDataSource {
   async create(params: CreateHabitParams): Promise<Habit> {
     const habits = await this.getAll();
@@ -28,7 +42,30 @@ export class LocalHabitsDataSource {
 
   async getAll(): Promise<Habit[]> {
     const data = await AsyncStorage.getItem(HABITS_KEY);
-    return data ? JSON.parse(data) : [];
+    const habits: Habit[] = data ? JSON.parse(data) : [];
+    const today = new Date().toISOString();
+    let needsUpdate = false;
+
+    // Reset counters for habits completed on previous days
+    const resetHabits = habits.map((habit): Habit => {
+      if (habit.lastCompletedDate && !isToday(habit.lastCompletedDate)) {
+        needsUpdate = true;
+        return {
+          ...habit,
+          currentCount: 0,
+          status: 'active',
+          lastCompletedDate: undefined,
+          updatedAt: today,
+        };
+      }
+      return habit;
+    });
+
+    if (needsUpdate) {
+      await AsyncStorage.setItem(HABITS_KEY, JSON.stringify(resetHabits));
+    }
+
+    return resetHabits;
   }
 
   async update(id: string, params: UpdateHabitParams): Promise<Habit> {

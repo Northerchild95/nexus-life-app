@@ -9,6 +9,7 @@ export interface Habit {
   targetCount: number;
   currentCount: number;
   status: HabitStatus;
+  lastCompletedDate?: string;
   createdAt: string;
   updatedAt: string;
 }

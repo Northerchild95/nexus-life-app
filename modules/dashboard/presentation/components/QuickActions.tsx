@@ -9,6 +9,7 @@ import type { MainTabParamList } from '@/core/navigation/types';
 type Props = {
   onCreateTask?: () => void;
   onCreateHabit?: () => void;
+  onCreateExpense?: () => void;
 };
 
 const actions = [
@@ -46,7 +47,7 @@ const actions = [
   },
 ] as const;
 
-export function QuickActions({ onCreateTask, onCreateHabit }: Props) {
+export function QuickActions({ onCreateTask, onCreateHabit, onCreateExpense }: Props) {
   const navigation = useNavigation<NavigationProp<MainTabParamList>>();
   return (
     <View className="gap-3">
@@ -60,6 +61,8 @@ export function QuickActions({ onCreateTask, onCreateHabit }: Props) {
                 ? onCreateTask
                 : action.label === 'Nuevo habito'
                 ? onCreateHabit
+                : action.label === 'Registrar gasto'
+                ? onCreateExpense
                 : action.goTo
                   ? () => navigation.navigate(action.goTo as never)
                   : undefined
