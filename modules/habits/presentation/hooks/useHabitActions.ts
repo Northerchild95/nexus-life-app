@@ -66,11 +66,10 @@ export function useHabitActions() {
 
       const today = new Date().toISOString();
 
-      // Check if already completed today
-      if (habit.lastCompletedDate && isToday(habit.lastCompletedDate)) {
-        const message = `Ya completaste tu objetivo de ${habit.targetCount} veces para este hábito hoy`;
-        setState({ isLoading: false, error: message });
-        throw new Error(message);
+      // Check if already reached the target - return early without error
+      if (habit.currentCount >= habit.targetCount) {
+        setState({ isLoading: false, error: null });
+        return habit;
       }
 
       // Reset counter if last completion was from a previous day

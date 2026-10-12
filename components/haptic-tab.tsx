@@ -1,8 +1,7 @@
 import * as Haptics from 'expo-haptics';
-import type { TabTriggerSlotProps } from 'expo-router/ui';
 import { Pressable } from 'react-native';
 
-export function HapticTab(props: TabTriggerSlotProps) {
+export function HapticTab(props: any) {
   return (
     <Pressable
       {...props}

@@ -1,9 +1,9 @@
 import type {
-  DashboardAgendaItem,
-  DashboardFocus,
-  DashboardInsight,
-  DashboardMetric,
-  DashboardSummary,
+    DashboardAgendaItem,
+    DashboardFocus,
+    DashboardInsight,
+    DashboardMetric,
+    DashboardSummary,
 } from '@/modules/dashboard/domain/entities';
 import type { GetDashboardSummaryParams } from '@/modules/dashboard/domain/repositories';
 import { createTasksRepository } from '@/modules/tasks/data/repositories';
@@ -32,8 +32,10 @@ export class MockDashboardDataSource {
 
   private getFocus(): DashboardFocus {
     return {
+      id: 'focus-weekly-plan',
       title: 'Finalizar el plan de trabajo semanal',
       durationLabel: '90 min',
+      duration: 90 * 60 * 1000, // 90 minutes in milliseconds
       description:
         'Cierra este bloque antes del mediodia y deja el resto del dia con menos friccion.',
       ritualTitle: 'Ritual recomendado',
