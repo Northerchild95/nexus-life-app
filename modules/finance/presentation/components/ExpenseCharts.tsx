@@ -62,10 +62,10 @@ export function ExpenseCharts({ expenses }: Props) {
     <Card className="gap-4">
       <Text className="text-lg font-semibold text-ink">Desglose por categoría</Text>
 
-      <View className="items-center">
+      <View className="pl-0">
         <PieChart
           data={chartData}
-          width={SCREEN_WIDTH - 100}
+          width={SCREEN_WIDTH - 80}
           height={220}
           chartConfig={{
             color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
@@ -74,7 +74,7 @@ export function ExpenseCharts({ expenses }: Props) {
           accessor="amount"
           backgroundColor="transparent"
           paddingLeft="15"
-          center={[10, 10]}
+          center={[-5, 10]}
           absolute
           style={{
             borderRadius: 16,

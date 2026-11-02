@@ -10,7 +10,7 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
     return null;
   }
 
-  const habitLabels = habits.map((h) => h.title.substring(0, 10));
+  const habitLabels = habits.map(() => '');
   const habitProgress = habits.map((h) => Math.round((h.currentCount / h.targetCount) * 100));
 
   // Weekly consistency data (simulated for now)
@@ -33,18 +33,18 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
       <View className="flex-row gap-4" style={{ width: screenWidth * 1.5 }}>
         {/* Progress Chart */}
-        <Card className="flex-1 gap-3 p-4">
+        <Card className="flex-1 gap-3 p-1">
           <Text className="text-lg font-semibold text-ink">Progreso hoy</Text>
           <BarChart
-            data={{
-              labels: habitLabels,
-              datasets: [
-                {
-                  data: habitProgress,
-                },
-              ],
-            }}
-            width={screenWidth * 0.7}
+             data={{
+                labels: habitLabels,
+                datasets: [
+                  {
+                    data: habitProgress,
+                  },
+                ],
+              }}
+            width={screenWidth * 0.6}
             height={200}
             chartConfig={chartConfig}
             withInnerLines={false}
@@ -52,6 +52,10 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
             fromZero
             yAxisLabel="%"
             yAxisSuffix=""
+            style={{
+              paddingTop: 16,
+              paddingRight: 35,
+            }}
           />
           <Text className="text-sm text-slate-600 text-center">
             Porcentaje de completación por hábito
@@ -77,9 +81,12 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
             withInnerLines={false}
             withOuterLines={false}
             bezier
+            yLabelsOffset={30}
             style={{
               marginVertical: 8,
               borderRadius: 16,
+              paddingTop: 16,
+              paddingRight: 45,
             }}
           />
           <Text className="text-sm text-slate-600 text-center">
