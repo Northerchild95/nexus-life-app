@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,24 +19,19 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ConfirmDialog } from '@/core/components/ConfirmDialog';
 import type { RootStackParamList } from '@/core/navigation/types';
+import { refreshRegisteredScreens } from '@/core/state/screenRefresh';
 import { useResolvedColorScheme } from '@/core/theme/useThemeSync';
 import { cn } from '@/core/utils/cn';
-import type { ExpenseCategory } from '@/modules/finance/domain/entities';
-import type { TaskPriority } from '@/modules/tasks/domain/entities';
+import type {
+  AssistantActionStatus,
+  AssistantIntent,
+  AssistantMessage,
+} from '@/modules/assistant/domain/entities';
+import { parseAssistantIntent } from '@/modules/assistant/domain/parsers';
 
-import {
-  ActionPreviewCard,
-  type AssistantActionPreview,
-} from '../components/ActionPreviewCard';
-
-type ChatRole = 'user' | 'assistant';
-
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  text: string;
-  preview?: AssistantActionPreview;
-};
+import { ActionPreviewCard } from '../components/ActionPreviewCard';
+import { useAssistantActions } from '../hooks/useAssistantActions';
+import { useAssistantHistory } from '../hooks/useAssistantHistory';
 
 const QUICK_PROMPTS = [
   { key: 'logExpense', icon: 'card-outline', promptKey: 'assistant.prompts.logExpense' },
@@ -45,83 +40,16 @@ const QUICK_PROMPTS = [
   { key: 'weeklySummary', icon: 'stats-chart-outline', promptKey: 'assistant.prompts.weeklySummary' },
 ] as const;
 
-const EXPENSE_INTENT =
-  /(\bspent\b|\bspend\b|\bbought\b|\bpurchase\b|\bgast[eé]\b|\bcompr[eé]\b|\bpagu[eé]\b|\bcoffee\b|\bcaf[eé]\b|\blunch\b|\balmuerzo\b|\bdinner\b|\bcena\b|\brestaurant\b|\$\s?\d)/i;
-
-const TASK_INTENT =
-  /(\btask\b|\btarea\b|\bremind\b|\breminder\b|\brecu[eé]rdame\b|\bremember\b|\bto-?do\b)/i;
-
-const SUMMARY_INTENT =
-  /(\bweek\b|\bsemana\b|\bsummary\b|\bresumen\b|\bhow am i\b|\bc[oó]mo voy\b)/i;
-
-const HABIT_INTENT = /(\bhabit\b|\bh[aá]bito\b|\broutine\b|\brutina\b)/i;
-
-const CATEGORY_HINTS: { pattern: RegExp; category: ExpenseCategory }[] = [
-  {
-    pattern: /(food|lunch|almuerzo|dinner|cena|caf[eé]|coffee|restaurant|comida)/i,
-    category: 'food',
-  },
-  { pattern: /(transport|uber|taxi|bus|gas|gasolina|metro)/i, category: 'transport' },
-  { pattern: /(movie|cine|netflix|game|juego|entertainment|ocio)/i, category: 'entertainment' },
-  { pattern: /(shop|shopping|compras|clothes|ropa|amazon)/i, category: 'shopping' },
-  { pattern: /(health|salud|pharmacy|farmacia|doctor|gym|gimnasio)/i, category: 'health' },
-  { pattern: /(bill|factura|internet|rent|alquiler|electric)/i, category: 'bills' },
-  { pattern: /(course|curso|book|libro|education|educaci[oó]n)/i, category: 'education' },
-];
-
-const pad = (value: number) => `${value}`.padStart(2, '0');
-
-const toDayKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const isoDayWithOffset = (offset: number) => {
-  const date = new Date();
-  date.setDate(date.getDate() + offset);
-  return toDayKey(date);
-};
-
-const capitalize = (value: string) =>
-  value.length > 0 ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
-
-const extractAmount = (text: string) => {
-  const match = text.match(/(\d+(?:[.,]\d{1,2})?)/);
-  if (!match) return 0;
-
-  const value = Number.parseFloat(match[1].replace(',', '.'));
-  return Number.isFinite(value) && value > 0 ? value : 0;
-};
-
-const detectCategory = (text: string) =>
-  CATEGORY_HINTS.find(({ pattern }) => pattern.test(text))?.category ?? 'other';
-
-const detectPriority = (text: string): TaskPriority => {
-  if (/(urgent|urgente|asap|high priority|alta prioridad|important|importante)/i.test(text)) {
-    return 'high';
-  }
-  if (/(low priority|baja prioridad|whenever|cuando pueda)/i.test(text)) {
-    return 'low';
-  }
-  return 'medium';
-};
-
-const extractTaskTitle = (text: string) => {
-  let title = text.trim();
-  title = title.replace(/^(please\s+)?(remind me to|remember to|recu[eé]rdame( que)?)\s+/i, '');
-  title = title.replace(
-    /^(please\s+)?(add|create|agrega|crea)\s+(a\s+|una\s+)?(high|medium|low|alta|media|baja)?\s*(priority\s+)?(task|tarea)\s*(to\s+|para\s+)?/i,
-    '',
-  );
-  title = title.replace(/\s+(today|tomorrow|hoy|mañana)\s*$/i, '');
-  title = title.replace(/[.!?]+$/, '').trim();
-
-  return capitalize(title);
-};
+const SUMMARY_INTENT = /(week|semana|summary|resumen|how am i|c[oó]mo voy|como voy)/i;
+const HABIT_INTENT = /(habit|h[aá]bito|routine|rutina)/i;
 
 type MessageBubbleProps = {
-  message: ChatMessage;
+  message: AssistantMessage;
+  onConfirmAction: (message: AssistantMessage) => Promise<void>;
+  onCancelAction: (message: AssistantMessage) => void;
 };
 
-function MessageBubble({ message }: MessageBubbleProps) {
+function MessageBubble({ message, onConfirmAction, onCancelAction }: MessageBubbleProps) {
   const { t } = useTranslation();
   const isUser = message.role === 'user';
 
@@ -145,9 +73,14 @@ function MessageBubble({ message }: MessageBubbleProps) {
           {message.text}
         </Text>
       </View>
-      {message.preview ? (
+      {message.intent ? (
         <View className="w-full max-w-[94%]">
-          <ActionPreviewCard preview={message.preview} />
+          <ActionPreviewCard
+            intent={message.intent}
+            initialStatus={message.actionStatus}
+            onConfirm={() => onConfirmAction(message)}
+            onCancel={() => onCancelAction(message)}
+          />
         </View>
       ) : null}
     </View>
@@ -155,119 +88,127 @@ function MessageBubble({ message }: MessageBubbleProps) {
 }
 
 export function AssistantScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const isDark = useResolvedColorScheme() === 'dark';
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => createSeedMessages());
+  const {
+    messages,
+    isLoading: isHistoryLoading,
+    appendMessage,
+    updateActionStatus,
+    clearHistory,
+  } = useAssistantHistory();
+  const { executeIntent } = useAssistantActions();
+
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isClearDialogVisible, setIsClearDialogVisible] = useState(false);
 
-  const listRef = useRef<FlatList<ChatMessage>>(null);
+  const listRef = useRef<FlatList<AssistantMessage>>(null);
   const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageCounter = useRef(0);
-  const languageRef = useRef(i18n.language);
 
-  function createSeedMessages(): ChatMessage[] {
-    return [
-      { id: 'seed-user-expense', role: 'user', text: t('assistant.mock.userExpenseSample') },
-      {
-        id: 'seed-assistant-expense',
-        role: 'assistant',
-        text: t('assistant.mock.assistantExpenseSample'),
-        preview: {
-          kind: 'expense',
-          title: t('assistant.mock.sampleExpenseTitle'),
-          amount: 24.5,
-          category: 'food',
-          date: isoDayWithOffset(0),
-        },
-      },
-    ];
-  }
-
-  const nextMessageId = () => {
+  const createMessage = (
+    role: AssistantMessage['role'],
+    text: string,
+    intent?: AssistantIntent,
+    actionStatus?: AssistantActionStatus,
+  ): AssistantMessage => {
     messageCounter.current += 1;
-    return `msg-${Date.now()}-${messageCounter.current}`;
+
+    return {
+      id: `assistant_${Date.now()}_${messageCounter.current}`,
+      role,
+      text,
+      createdAt: new Date().toISOString(),
+      ...(intent ? { intent, actionStatus: actionStatus ?? 'pending' } : {}),
+    };
   };
 
-  const buildAssistantReply = (text: string): ChatMessage => {
-    const id = nextMessageId();
+  const withFallbackTitle = (intent: AssistantIntent): AssistantIntent => {
+    const title = intent.title.trim();
+    if (title) return { ...intent, title };
+
+    return {
+      ...intent,
+      title: t(
+        intent.kind === 'expense'
+          ? 'assistant.replies.defaultExpenseTitle'
+          : 'assistant.replies.defaultTaskTitle',
+      ),
+    };
+  };
+
+  const buildAssistantReply = (text: string): AssistantMessage => {
+    const parsedIntent = parseAssistantIntent(text);
+
+    if (parsedIntent) {
+      const intent = withFallbackTitle(parsedIntent);
+
+      return createMessage(
+        'assistant',
+        t(intent.kind === 'expense' ? 'assistant.replies.expense' : 'assistant.replies.task'),
+        intent,
+      );
+    }
 
     if (SUMMARY_INTENT.test(text)) {
-      return { id, role: 'assistant', text: t('assistant.mock.replySummary') };
-    }
-
-    if (EXPENSE_INTENT.test(text)) {
-      return {
-        id,
-        role: 'assistant',
-        text: t('assistant.mock.replyExpense'),
-        preview: {
-          kind: 'expense',
-          title: t('assistant.mock.defaultExpenseTitle'),
-          amount: extractAmount(text),
-          category: detectCategory(text),
-          date: isoDayWithOffset(0),
-        },
-      };
-    }
-
-    if (TASK_INTENT.test(text)) {
-      return {
-        id,
-        role: 'assistant',
-        text: t('assistant.mock.replyTask'),
-        preview: {
-          kind: 'task',
-          title: extractTaskTitle(text) || t('assistant.mock.defaultTaskTitle'),
-          priority: detectPriority(text),
-          dueDate: isoDayWithOffset(/tomorrow|mañana/i.test(text) ? 1 : 0),
-        },
-      };
+      return createMessage('assistant', t('assistant.replies.summary'));
     }
 
     if (HABIT_INTENT.test(text)) {
-      return { id, role: 'assistant', text: t('assistant.mock.replyHabit') };
+      return createMessage('assistant', t('assistant.replies.habit'));
     }
 
-    return {
-      id,
-      role: 'assistant',
-      text: t('assistant.mock.replyGeneric', { text }),
-    };
+    return createMessage('assistant', t('assistant.replies.generic', { text }));
   };
 
   const sendMessage = (value?: string) => {
     const text = (value ?? input).trim();
-    if (!text || isThinking) return;
+    if (!text || isThinking || isHistoryLoading) return;
 
     setInput('');
-    setMessages((current) => [
-      ...current,
-      { id: nextMessageId(), role: 'user', text },
-    ]);
+    appendMessage(createMessage('user', text));
     setIsThinking(true);
 
     if (replyTimer.current) clearTimeout(replyTimer.current);
     replyTimer.current = setTimeout(() => {
-      setMessages((current) => [...current, buildAssistantReply(text)]);
+      appendMessage(buildAssistantReply(text));
       setIsThinking(false);
-    }, 700);
+      replyTimer.current = null;
+    }, 450);
+  };
+
+  const handleConfirmAction = async (message: AssistantMessage) => {
+    if (!message.intent) return;
+
+    await executeIntent(message.intent);
+    updateActionStatus(message.id, 'confirmed');
+  };
+
+  const handleCancelAction = (message: AssistantMessage) => {
+    updateActionStatus(message.id, 'cancelled');
   };
 
   const handleClearConversation = () => {
-    if (replyTimer.current) clearTimeout(replyTimer.current);
+    if (replyTimer.current) {
+      clearTimeout(replyTimer.current);
+      replyTimer.current = null;
+    }
+
     setIsThinking(false);
-    setMessages([]);
+    clearHistory();
     setIsClearDialogVisible(false);
   };
 
   const handleClose = () => {
     Keyboard.dismiss();
+    // Safety net: refresh any screen showing persisted data when the modal
+    // closes, even if the save happened a moment ago.
+    void refreshRegisteredScreens();
     navigation.goBack();
   };
 
@@ -288,20 +229,13 @@ export function AssistantScreen() {
     [],
   );
 
-  useEffect(() => {
-    if (languageRef.current === i18n.language) return;
-
-    languageRef.current = i18n.language;
-    if (replyTimer.current) clearTimeout(replyTimer.current);
-    setIsThinking(false);
-    setMessages(createSeedMessages());
-    // The seed conversation is translated copy, so it is rebuilt only when the
-    // active language changes. `createSeedMessages` intentionally stays out of
-    // the dependency list to avoid resetting the chat on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.language]);
-
-  const renderMessage = ({ item }: { item: ChatMessage }) => <MessageBubble message={item} />;
+  const renderMessage = ({ item }: { item: AssistantMessage }) => (
+    <MessageBubble
+      message={item}
+      onConfirmAction={handleConfirmAction}
+      onCancelAction={handleCancelAction}
+    />
+  );
 
   return (
     <SafeAreaView
@@ -310,7 +244,7 @@ export function AssistantScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View className="border-b border-border/70 px-5 pb-3 pt-3 dark:border-dark-border">
+        <View className="relative z-10 border-b border-border/70 px-5 pb-4 pt-3 dark:border-dark-border">
           <View className="flex-row items-center gap-3">
             <View className="h-11 w-11 items-center justify-center rounded-2xl bg-brand-600">
               <Ionicons name="sparkles" size={22} color="#ffffff" />
@@ -331,11 +265,11 @@ export function AssistantScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('assistant.clearChat')}
-                disabled={messages.length === 0}
+                disabled={messages.length === 0 || isHistoryLoading}
                 onPress={() => setIsClearDialogVisible(true)}
                 className={cn(
                   'h-10 w-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-surface-soft',
-                  messages.length === 0 && 'opacity-40',
+                  (messages.length === 0 || isHistoryLoading) && 'opacity-40',
                 )}>
                 <Ionicons name="trash-outline" size={18} color={isDark ? '#9ca3af' : '#60708a'} />
               </Pressable>
@@ -346,14 +280,6 @@ export function AssistantScreen() {
                 className="h-10 w-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-surface-soft">
                 <Ionicons name="close" size={20} color={isDark ? '#f5f5f5' : '#10203a'} />
               </Pressable>
-            </View>
-          </View>
-
-          <View className="mt-3 flex-row">
-            <View className="rounded-full bg-brand-100 px-2.5 py-1 dark:bg-brand-900/30">
-              <Text className="text-[10px] font-semibold uppercase tracking-[1px] text-brand-700 dark:text-brand-300">
-                {t('assistant.previewModeBadge')}
-              </Text>
             </View>
           </View>
         </View>
@@ -386,6 +312,16 @@ export function AssistantScreen() {
               </Text>
             </View>
           }
+          ListEmptyComponent={
+            isHistoryLoading ? (
+              <View className="items-center gap-2 py-6">
+                <ActivityIndicator size="small" color={isDark ? '#86b0ff' : '#1d4ed8'} />
+                <Text className="text-sm font-medium text-muted dark:text-dark-muted">
+                  {t('assistant.loadingHistory')}
+                </Text>
+              </View>
+            ) : undefined
+          }
           ListFooterComponent={
             isThinking ? (
               <View className="items-start pt-2">
@@ -415,11 +351,11 @@ export function AssistantScreen() {
               <Pressable
                 key={prompt.key}
                 accessibilityRole="button"
-                disabled={isThinking}
+                disabled={isThinking || isHistoryLoading}
                 onPress={() => sendMessage(t(prompt.promptKey))}
                 className={cn(
                   'flex-row items-center gap-2 rounded-full border border-border bg-white px-3 py-2 dark:border-dark-border dark:bg-dark-surface-soft',
-                  isThinking && 'opacity-50',
+                  (isThinking || isHistoryLoading) && 'opacity-50',
                 )}>
                 <Ionicons
                   name={prompt.icon}
@@ -451,11 +387,11 @@ export function AssistantScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('assistant.send')}
-              disabled={!input.trim() || isThinking}
+              disabled={!input.trim() || isThinking || isHistoryLoading}
               onPress={() => sendMessage()}
               className={cn(
                 'h-12 w-12 items-center justify-center rounded-full bg-brand-600 shadow-lift',
-                (!input.trim() || isThinking) && 'opacity-40',
+                (!input.trim() || isThinking || isHistoryLoading) && 'opacity-40',
               )}>
               <Ionicons name="arrow-up" size={20} color="#ffffff" />
             </Pressable>

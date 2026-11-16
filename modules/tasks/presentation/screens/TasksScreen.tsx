@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
 
@@ -6,6 +7,7 @@ import { Button } from '@/core/components/Button';
 import { Card } from '@/core/components/Card';
 import { Header } from '@/core/components/Header';
 import { ScreenContainer } from '@/core/components/ScreenContainer';
+import { registerScreenRefresher } from '@/core/state/screenRefresh';
 import { useResolvedColorScheme } from '@/core/theme/useThemeSync';
 import type { Task } from '@/modules/tasks/domain/entities';
 import { useTasks } from '@/modules/tasks/presentation/hooks';
@@ -25,6 +27,18 @@ export function TasksScreen() {
   const { t, i18n } = useTranslation();
   const isDark = useResolvedColorScheme() === 'dark';
   const { tasks, isLoading, error, loadTasks } = useTasks();
+
+  // Refresh every time the tab regains focus, e.g. after closing the assistant
+  // modal where new tasks may have been created.
+  useFocusEffect(
+    useCallback(() => {
+      void loadTasks();
+    }, [loadTasks]),
+  );
+
+  // Same pattern as CreateTaskModal's onSuccess: expose this screen's refresh
+  // so the assistant can invoke it right after saving a task.
+  useEffect(() => registerScreenRefresher(loadTasks), [loadTasks]);
 
   const stats = useMemo(() => {
     const highPriorityTasks = tasks.filter(

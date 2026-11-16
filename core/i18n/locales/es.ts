@@ -457,31 +457,51 @@ export const es = {
     title: 'Asistente Nexus',
     subtitle: 'Tu copiloto personal para tareas, hábitos y gastos',
     open: 'Abrir asistente',
-    previewModeBadge: 'Vista previa UI',
     close: 'Cerrar',
     clearChat: 'Limpiar chat',
     clearTitle: 'Limpiar conversación',
-    clearMessage: 'Esto limpiará los mensajes de prueba actuales en memoria.',
+    clearMessage: 'Esto eliminará el historial de conversación guardado en este dispositivo.',
     clearConfirm: 'Limpiar',
     thinking: 'Pensando...',
+    loadingHistory: 'Cargando historial...',
     inputPlaceholder: 'Pídeme anotar un gasto o crear una tarea...',
     send: 'Enviar',
     welcomeTitle: '¿En qué te ayudo hoy?',
     welcomeSubtitle:
-      'Prueba una sugerencia rápida o escribe una petición para previsualizar las tarjetas de acción.',
+      'Escribe o toca una sugerencia. Prepararé un borrador y solo lo guardaré cuando lo confirmes.',
     quickSuggestionsLabel: 'Sugerencias rápidas',
     youLabel: 'Tú',
     assistantLabel: 'Nexus IA',
-    mockSourceBadge: 'Mockup',
     prompts: {
       logExpense: 'Gasté $180 en comida',
       createTask: 'Recuérdame pagar el internet mañana',
       createHabit: 'Nuevo hábito: leer 20 min diarios',
       weeklySummary: '¿Cómo voy esta semana?',
     },
+    replies: {
+      expense: 'Entendido. Revisa el borrador del gasto y confirma para guardarlo:',
+      task: 'Entendido. Revisa el borrador de la tarea y confirma para guardarla:',
+      habit:
+        'La creación de hábitos llegará en una próxima fase. Por ahora puedo guardar gastos y tareas.',
+      summary:
+        'Todavía no puedo generar resúmenes. Por ahora puedo registrar gastos y crear tareas.',
+      generic:
+        'No pude detectar una acción en "{{text}}". Prueba con "Gasté $15 en café" o "Recuérdame pagar el internet mañana".',
+      defaultExpenseTitle: 'Gasto rápido',
+      defaultTaskTitle: 'Nueva tarea',
+    },
+    errors: {
+      invalidAmount: 'No pude detectar un monto válido para el gasto.',
+      missingTitle: 'Necesito un título para guardar esta acción.',
+      saveExpense: 'No se pudo guardar el gasto. Inténtalo de nuevo.',
+      saveTask: 'No se pudo guardar la tarea. Inténtalo de nuevo.',
+      saveHistory: 'No se pudo guardar el historial del chat.',
+      loadHistory: 'No se pudo cargar el historial del chat.',
+    },
     actionPreview: {
-      expenseBadge: 'Vista previa de gasto',
-      taskBadge: 'Vista previa de tarea',
+      expenseBadge: 'Gasto listo para guardar',
+      taskBadge: 'Tarea lista para guardar',
+      draftBadge: 'Borrador',
       amountLabel: 'Monto',
       categoryLabel: 'Categoría',
       dateLabel: 'Fecha',
@@ -489,34 +509,13 @@ export const es = {
       dueDateLabel: 'Fecha límite',
       confirm: 'Confirmar',
       cancel: 'Cancelar',
-      confirmedStatus: 'Confirmado (solo vista previa)',
+      retry: 'Reintentar',
+      confirmedExpense: 'Gasto guardado',
+      confirmedTask: 'Tarea creada',
       cancelledStatus: 'Cancelado',
+      genericError: 'No se pudo guardar. Inténtalo de nuevo.',
       today: 'Hoy',
       tomorrow: 'Mañana',
-    },
-    mock: {
-      greeting:
-        '¡Hola! Esta es la vista previa visual del Asistente Nexus. Toca una sugerencia rápida o escribe un mensaje para probar las tarjetas de acción.',
-      userExpenseSample: 'Gasté $24.50 en almuerzo con el equipo hoy',
-      assistantExpenseSample:
-        'Preparé este borrador de gasto para ti. Revisa los datos y confirma cuando quieras:',
-      sampleExpenseTitle: 'Almuerzo con el equipo',
-      userTaskSample: 'Agrega una tarea urgente para entregar el reporte mensual mañana',
-      assistantTaskSample:
-        'Listo. Aquí tienes la vista previa de la tarea para confirmar:',
-      sampleTaskTitle: 'Entregar reporte mensual',
-      replyExpense:
-        'Generé esta vista previa de gasto en memoria. Puedes confirmarla o cancelarla abajo:',
-      replyTask:
-        'Generé esta vista previa de tarea en memoria. Revisa los detalles abajo:',
-      replyHabit:
-        'La creación de hábitos llegará en la siguiente fase. Por ahora, prueba un gasto o una tarea para ver las tarjetas de confirmación.',
-      replySummary:
-        'Modo vista previa activo: en la Fase 2 aquí consultaremos tus tareas, hábitos y gastos reales guardados localmente.',
-      replyGeneric:
-        'Vista previa recibió "{{text}}". Prueba mencionar un gasto (ej. "$15 café") o una tarea para ver una tarjeta de acción.',
-      defaultExpenseTitle: 'Gasto rápido',
-      defaultTaskTitle: 'Dar seguimiento a solicitud',
     },
   },
 };

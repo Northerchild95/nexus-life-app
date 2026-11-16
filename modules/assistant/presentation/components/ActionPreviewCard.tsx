@@ -1,36 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/core/components/Button';
 import { cn } from '@/core/utils/cn';
-import type { ExpenseCategory } from '@/modules/finance/domain/entities';
-import type { TaskPriority } from '@/modules/tasks/domain/entities';
 
-export type AssistantExpensePreview = {
-  kind: 'expense';
-  title: string;
-  amount: number;
-  category: ExpenseCategory;
-  date: string;
-};
+import type { AssistantActionStatus, AssistantIntent } from '../../domain/entities';
 
-export type AssistantTaskPreview = {
-  kind: 'task';
-  title: string;
-  priority: TaskPriority;
-  dueDate: string;
-};
-
-export type AssistantActionPreview = AssistantExpensePreview | AssistantTaskPreview;
-
-type PreviewStatus = 'pending' | 'confirmed' | 'cancelled';
+type CardStatus = 'pending' | 'executing' | 'confirmed' | 'cancelled' | 'error';
 
 type Props = {
-  preview: AssistantActionPreview;
-  onConfirm?: (preview: AssistantActionPreview) => void;
-  onCancel?: (preview: AssistantActionPreview) => void;
+  intent: AssistantIntent;
+  initialStatus?: AssistantActionStatus;
+  onConfirm?: (intent: AssistantIntent) => Promise<void> | void;
+  onCancel?: (intent: AssistantIntent) => void;
   className?: string;
 };
 
@@ -68,18 +52,39 @@ function formatPreviewDate(
 
 const formatAmount = (amount: number) => (amount > 0 ? `$${amount.toFixed(2)}` : '—');
 
+const initialCardStatus = (status?: AssistantActionStatus): CardStatus => {
+  if (status === 'confirmed') return 'confirmed';
+  if (status === 'cancelled') return 'cancelled';
+  return 'pending';
+};
+
 /**
- * Visual-only confirmation card. It never persists anything: confirming or
- * cancelling just updates the card status so Phase 1 can be tested end to end.
+ * Confirmation card for a locally parsed assistant intent. Confirming calls
+ * the real finance/tasks use cases and keeps execution, success, and error
+ * feedback inside the card.
  */
-export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: Props) {
+export function ActionPreviewCard({
+  intent,
+  initialStatus,
+  onConfirm,
+  onCancel,
+  className,
+}: Props) {
   const { t, i18n } = useTranslation();
-  const [status, setStatus] = useState<PreviewStatus>('pending');
+  const [status, setStatus] = useState<CardStatus>(() => initialCardStatus(initialStatus));
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const isPending = status === 'pending';
-  const isExpense = preview.kind === 'expense';
+  useEffect(() => {
+    if (initialStatus === 'confirmed') setStatus('confirmed');
+    else if (initialStatus === 'cancelled') setStatus('cancelled');
+  }, [initialStatus]);
 
-  const dateValue = isExpense ? preview.date : preview.dueDate;
+  const isExpense = intent.kind === 'expense';
+  const isExecuting = status === 'executing';
+  const isSettled = status === 'confirmed' || status === 'cancelled';
+  const isActionable = !isSettled && !isExecuting;
+
+  const dateValue = isExpense ? intent.date : intent.dueDate;
   const dateLabel = formatPreviewDate(
     dateValue,
     i18n.language,
@@ -88,49 +93,50 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
   );
 
   const priorityTone =
-    preview.kind === 'task'
-      ? preview.priority === 'high'
+    intent.kind === 'task'
+      ? intent.priority === 'high'
         ? 'text-danger'
-        : preview.priority === 'medium'
+        : intent.priority === 'medium'
           ? 'text-warning'
           : 'text-success'
       : undefined;
 
-  const rows = isExpense
-    ? [
-        {
-          key: 'amount',
-          label: t('assistant.actionPreview.amountLabel'),
-          value: formatAmount(preview.amount),
-          valueClassName: undefined,
-        },
-        {
-          key: 'category',
-          label: t('assistant.actionPreview.categoryLabel'),
-          value: t(`finance.categories.${preview.category}`),
-          valueClassName: undefined,
-        },
-        {
-          key: 'date',
-          label: t('assistant.actionPreview.dateLabel'),
-          value: dateLabel,
-          valueClassName: undefined,
-        },
-      ]
-    : [
-        {
-          key: 'priority',
-          label: t('assistant.actionPreview.priorityLabel'),
-          value: t(`tasks.${preview.priority}`),
-          valueClassName: priorityTone,
-        },
-        {
-          key: 'dueDate',
-          label: t('assistant.actionPreview.dueDateLabel'),
-          value: dateLabel,
-          valueClassName: undefined,
-        },
-      ];
+  const rows =
+    intent.kind === 'expense'
+      ? [
+          {
+            key: 'amount',
+            label: t('assistant.actionPreview.amountLabel'),
+            value: formatAmount(intent.amount),
+            valueClassName: undefined,
+          },
+          {
+            key: 'category',
+            label: t('assistant.actionPreview.categoryLabel'),
+            value: t(`finance.categories.${intent.category}`),
+            valueClassName: undefined,
+          },
+          {
+            key: 'date',
+            label: t('assistant.actionPreview.dateLabel'),
+            value: dateLabel,
+            valueClassName: undefined,
+          },
+        ]
+      : [
+          {
+            key: 'priority',
+            label: t('assistant.actionPreview.priorityLabel'),
+            value: t(`tasks.${intent.priority}`),
+            valueClassName: priorityTone,
+          },
+          {
+            key: 'dueDate',
+            label: t('assistant.actionPreview.dueDateLabel'),
+            value: dateLabel,
+            valueClassName: undefined,
+          },
+        ];
 
   const accent = isExpense
     ? {
@@ -150,7 +156,9 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
     status === 'confirmed'
       ? {
           icon: 'checkmark-circle' as const,
-          label: t('assistant.actionPreview.confirmedStatus'),
+          label: isExpense
+            ? t('assistant.actionPreview.confirmedExpense')
+            : t('assistant.actionPreview.confirmedTask'),
           container: 'bg-emerald-100 dark:bg-emerald-900/30',
           text: 'text-emerald-700 dark:text-emerald-300',
           color: '#047857',
@@ -163,16 +171,31 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
           color: '#64748b',
         };
 
-  const handleConfirm = () => {
-    if (!isPending) return;
-    setStatus('confirmed');
-    onConfirm?.(preview);
+  const handleConfirm = async () => {
+    if (!isActionable) return;
+
+    setStatus('executing');
+    setErrorMessage(null);
+
+    try {
+      await onConfirm?.(intent);
+      setStatus('confirmed');
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : t('assistant.actionPreview.genericError'),
+      );
+    }
   };
 
   const handleCancel = () => {
-    if (!isPending) return;
+    if (!isActionable) return;
+
     setStatus('cancelled');
-    onCancel?.(preview);
+    setErrorMessage(null);
+    onCancel?.(intent);
   };
 
   return (
@@ -190,14 +213,16 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
             {accent.badge}
           </Text>
           <Text className="text-base font-semibold leading-6 text-ink dark:text-dark-ink">
-            {preview.title}
+            {intent.title}
           </Text>
         </View>
-        <View className="rounded-full bg-surface-strong px-2 py-1 dark:bg-dark-surface-strong">
-          <Text className="text-[10px] font-semibold uppercase tracking-[1px] text-muted dark:text-dark-muted">
-            {t('assistant.mockSourceBadge')}
-          </Text>
-        </View>
+        {!isSettled ? (
+          <View className="rounded-full bg-surface-strong px-2 py-1 dark:bg-dark-surface-strong">
+            <Text className="text-[10px] font-semibold uppercase tracking-[1px] text-muted dark:text-dark-muted">
+              {t('assistant.actionPreview.draftBadge')}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View className="rounded-2xl bg-surface-soft px-3 py-1 dark:bg-dark-surface">
@@ -220,20 +245,16 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
         ))}
       </View>
 
-      {isPending ? (
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Button
-              label={t('assistant.actionPreview.cancel')}
-              onPress={handleCancel}
-              variant="secondary"
-            />
-          </View>
-          <View className="flex-1">
-            <Button label={t('assistant.actionPreview.confirm')} onPress={handleConfirm} />
-          </View>
+      {errorMessage ? (
+        <View className="flex-row items-start gap-2 rounded-2xl bg-red-50 px-3 py-2.5 dark:bg-red-900/20">
+          <Ionicons name="alert-circle" size={18} color="#dc2626" />
+          <Text className="flex-1 text-sm font-medium text-red-700 dark:text-red-300">
+            {errorMessage}
+          </Text>
         </View>
-      ) : (
+      ) : null}
+
+      {isSettled ? (
         <View
           className={cn(
             'flex-row items-center gap-2 rounded-2xl px-3 py-2.5',
@@ -243,6 +264,31 @@ export function ActionPreviewCard({ preview, onConfirm, onCancel, className }: P
           <Text className={cn('flex-1 text-sm font-semibold', statusConfig.text)}>
             {statusConfig.label}
           </Text>
+        </View>
+      ) : (
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <Button
+              label={t('assistant.actionPreview.cancel')}
+              onPress={handleCancel}
+              variant="secondary"
+              disabled={isExecuting}
+            />
+          </View>
+          <View className="flex-1">
+            <Button
+              label={
+                status === 'error'
+                  ? t('assistant.actionPreview.retry')
+                  : t('assistant.actionPreview.confirm')
+              }
+              onPress={() => {
+                void handleConfirm();
+              }}
+              loading={isExecuting}
+              disabled={isExecuting}
+            />
+          </View>
         </View>
       )}
     </View>

@@ -1,53 +1,46 @@
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useDomainDataStore } from '@/core/store/domainDataStore';
 import { createExpenseRepository } from '@/modules/finance/data/repositories';
-import type { Expense } from '@/modules/finance/domain/entities';
 import { GetExpensesUseCase } from '@/modules/finance/domain/useCases';
-
-type State = {
-  isLoading: boolean;
-  error: string | null;
-  expenses: Expense[];
-};
 
 export function useExpenses() {
   const { t } = useTranslation();
-  const [state, setState] = useState<State>({ isLoading: true, error: null, expenses: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getExpensesUseCase = useMemo(() => {
-    return new GetExpensesUseCase(createExpenseRepository());
-  }, []);
+  const expenses = useDomainDataStore((state) => state.expenses);
+  const setExpenses = useDomainDataStore((state) => state.setExpenses);
 
-  const loadExpenses = useCallback(async () => {
-    setState((current) => ({ ...current, isLoading: true, error: null }));
-
-    try {
-      const expenses = await getExpensesUseCase.execute();
-      setState({ isLoading: false, error: null, expenses });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t('finance.errorLoading');
-      setState({ isLoading: false, error: message, expenses: [] });
-    }
-  }, [getExpensesUseCase, t]);
-
-  useEffect(() => {
-    void loadExpenses();
-  }, [loadExpenses]);
-
-  // Reload expenses when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      void loadExpenses();
-    }, [loadExpenses])
+  const getExpensesUseCase = useMemo(
+    () => new GetExpensesUseCase(createExpenseRepository()),
+    [],
   );
 
+  const loadExpenses = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const loaded = await getExpensesUseCase.execute();
+      setExpenses(loaded);
+    } catch (loadError) {
+      const message =
+        loadError instanceof Error ? loadError.message : t('finance.errorLoading');
+      setExpenses([]);
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getExpensesUseCase, setExpenses, t]);
+
   return {
-    ...state,
-    isLoading: state.isLoading,
-    isError: !!state.error,
-    isSuccess: !state.isLoading && !state.error,
+    expenses,
+    isLoading,
+    isError: !!error,
+    error,
+    isSuccess: !isLoading && !error,
     refresh: loadExpenses,
   };
 }

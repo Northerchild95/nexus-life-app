@@ -1,4 +1,5 @@
 import { ConfirmDialog, FocusAlert, ScreenContainer, SoundPlayer } from '@/core/components';
+import { registerScreenRefresher } from '@/core/state/screenRefresh';
 import {
     DailySummary,
     FocusCard,
@@ -17,7 +18,7 @@ import { useHabitActions } from '@/modules/habits/presentation/hooks/useHabitAct
 import { CreateTaskModal, EditTaskModal } from '@/modules/tasks/presentation/components';
 import { useTaskActions } from '@/modules/tasks/presentation/hooks/useTaskActions';
 import { useAudioPlayer } from 'expo-audio';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
@@ -43,6 +44,10 @@ export function DashboardScreen() {
   const audioPlayer = useAudioPlayer(require('@/assets/sounds/complete.mp3'));
   const pauseAudioPlayer = useAudioPlayer(require('@/assets/sounds/pause.mp3'));
   const { error, isError, isLoading, refresh, summary } = useDashboardSummary();
+
+  // The assistant calls this after saving a task/expense, just like the
+  // onSuccess prop of the create modals below.
+  useEffect(() => registerScreenRefresher(refresh), [refresh]);
   const { completeTask, deleteTask } = useTaskActions();
   const { completeHabit, deleteHabit } = useHabitActions();
   const { deleteExpense } = useExpenseActions();

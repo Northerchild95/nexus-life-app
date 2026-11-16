@@ -58,7 +58,14 @@ export function AppNavigator() {
           <RootStack.Screen
             name="Assistant"
             component={AssistantScreen}
-            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+            options={{
+              // Full-screen presentation prevents tab header icons from
+              // showing behind the assistant close button on the dimmed
+              // background of a regular modal.
+              presentation: 'fullScreenModal',
+              animation: 'slide_from_bottom',
+              contentStyle: { backgroundColor: isDark ? '#1a1d21' : '#f3f6fb' },
+            }}
           />
         </RootStack.Navigator>
       ) : (

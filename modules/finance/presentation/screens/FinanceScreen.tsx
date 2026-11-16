@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
@@ -8,6 +9,7 @@ import { Card } from '@/core/components/Card';
 import { Header } from '@/core/components/Header';
 import { ScreenContainer } from '@/core/components/ScreenContainer';
 import i18n from '@/core/i18n/i18n';
+import { registerScreenRefresher } from '@/core/state/screenRefresh';
 import { EditExpenseModal, ExpenseCharts } from '@/modules/finance/presentation/components';
 import type { ExpenseCategory } from '../../domain/entities';
 import { useExpenseActions, useExpenses } from '../hooks';
@@ -32,6 +34,16 @@ export function FinanceScreen() {
   const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
   const [expenseToEditId, setExpenseToEditId] = useState<string | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+
+  // Refresh every time the tab regains focus, e.g. after closing the assistant
+  // modal where new expenses may have been logged.
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
+
+  useEffect(() => registerScreenRefresher(refresh), [refresh]);
 
   const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const verifiedCount = expenses.filter((e) => e.isVerified).length;
