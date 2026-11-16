@@ -7,6 +7,7 @@ import { ResumeFocusSessionUseCase } from '@/modules/dashboard/domain/useCases/R
 import { StartFocusSessionUseCase } from '@/modules/dashboard/domain/useCases/StartFocusSessionUseCase';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const repository = new FocusSessionRepositoryImpl();
 const startUseCase = new StartFocusSessionUseCase(repository);
@@ -15,6 +16,7 @@ const resumeUseCase = new ResumeFocusSessionUseCase(repository);
 const completeUseCase = new CompleteFocusSessionUseCase(repository);
 
 export function useFocusSession() {
+  const { t } = useTranslation();
   const [session, setSession] = useState<FocusSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function useFocusSession() {
         setRemainingTime(getRemainingTime(activeSession));
       }
     } catch (err) {
-      setError('Error loading session');
+      setError(t('dashboard.focus.errors.loading'));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -72,7 +74,7 @@ export function useFocusSession() {
       setRemainingTime(duration);
       return newSession;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error starting session';
+      const message = err instanceof Error ? err.message : t('dashboard.focus.errors.starting');
       setError(message);
       throw err;
     }
@@ -86,7 +88,7 @@ export function useFocusSession() {
       const pausedSession = await pauseUseCase.execute(session.id);
       setSession(pausedSession);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error pausing session';
+      const message = err instanceof Error ? err.message : t('dashboard.focus.errors.pausing');
       setError(message);
       throw err;
     }
@@ -100,7 +102,7 @@ export function useFocusSession() {
       const resumedSession = await resumeUseCase.execute(session.id);
       setSession(resumedSession);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error resuming session';
+      const message = err instanceof Error ? err.message : t('dashboard.focus.errors.resuming');
       setError(message);
       throw err;
     }
@@ -130,7 +132,7 @@ export function useFocusSession() {
       playCompletionFeedback();
       return completedSession;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error completing session';
+      const message = err instanceof Error ? err.message : t('dashboard.focus.errors.completing');
       setError(message);
       throw err;
     }

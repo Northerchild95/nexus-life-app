@@ -1,26 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { ConfirmDialog } from '@/core/components';
 import { Card } from '@/core/components/Card';
 import { Header } from '@/core/components/Header';
 import { ScreenContainer } from '@/core/components/ScreenContainer';
+import i18n from '@/core/i18n/i18n';
 import { EditExpenseModal, ExpenseCharts } from '@/modules/finance/presentation/components';
 import type { ExpenseCategory } from '../../domain/entities';
 import { useExpenseActions, useExpenses } from '../hooks';
-
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  food: 'Comida',
-  transport: 'Transporte',
-  entertainment: 'Entretenimiento',
-  shopping: 'Compras',
-  health: 'Salud',
-  bills: 'Facturas',
-  education: 'Educación',
-  other: 'Otros',
-  custom: 'Personalizada',
-};
 
 const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   food: '#ef4444',
@@ -35,6 +25,7 @@ const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
 };
 
 export function FinanceScreen() {
+  const { t } = useTranslation();
   const { expenses, isLoading, isError, error, refresh } = useExpenses();
   const { deleteExpense, updateExpense } = useExpenseActions();
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
@@ -47,7 +38,8 @@ export function FinanceScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    const locale = i18n.language === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -94,19 +86,23 @@ export function FinanceScreen() {
 
   return (
     <ScreenContainer scrollable contentClassName="gap-4 mb-8">
-      <Header title="Finance" subtitle="Gestiona tus gastos de forma inteligente." />
+      <Header title={t('finance.title')} subtitle={t('finance.subtitle')} />
 
-      <Card className="gap-4 bg-slate-900">
-        <Text className="text-sm font-medium uppercase tracking-wide text-muted">Total gastado</Text>
+      <Card variant="ink" className="gap-4">
+        <Text className="text-sm font-medium uppercase tracking-wide text-slate-300">{t('finance.totalSpent')}</Text>
         <Text className="text-3xl font-bold text-white">${totalSpent.toFixed(2)}</Text>
         <View className="flex-row items-center gap-4">
           <Text className="text-base leading-6 text-slate-400">
-            {expenses.length} {expenses.length === 1 ? 'gasto registrado' : 'gastos registrados'}
+            {expenses.length === 1
+              ? t('finance.expenseSingular', { count: expenses.length })
+              : t('finance.expensePlural', { count: expenses.length })}
           </Text>
           {verifiedCount > 0 && (
             <View className="flex-row items-center gap-1">
               <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-              <Text className="text-sm font-medium text-emerald-400">{verifiedCount} verificados</Text>
+              <Text className="text-sm font-medium text-emerald-400">
+                {t('finance.verified', { count: verifiedCount })}
+              </Text>
             </View>
           )}
         </View>
@@ -114,25 +110,25 @@ export function FinanceScreen() {
 
       <Card className="gap-3">
         <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-semibold text-ink">Gastos recientes</Text>
+          <Text className="text-lg font-semibold text-ink dark:text-dark-ink">{t('finance.recentExpenses')}</Text>
           <Pressable onPress={refresh}>
-            <Text className="text-sm font-semibold text-brand-700">Actualizar</Text>
+            <Text className="text-sm font-semibold text-brand-700 dark:text-white">{t('finance.refresh')}</Text>
           </Pressable>
         </View>
 
         {isLoading && !expenses.length ? (
           <View className="items-center justify-center py-8">
-            <Text className="text-slate-600">Cargando gastos...</Text>
+            <Text className="text-slate-600 dark:text-slate-400">{t('finance.loadingExpenses')}</Text>
           </View>
         ) : isError ? (
           <View className="items-center justify-center py-8">
-            <Text className="text-slate-600">{error || 'Error al cargar gastos'}</Text>
+            <Text className="text-slate-600 dark:text-slate-400">{error || t('finance.errorLoading')}</Text>
           </View>
         ) : expenses.length === 0 ? (
           <View className="items-center justify-center py-8">
-            <Text className="text-slate-600">No hay gastos registrados</Text>
-            <Text className="mt-2 text-sm text-slate-500">
-              Registra tu primer gasto desde el dashboard
+            <Text className="text-slate-600 dark:text-slate-400">{t('finance.noExpenses')}</Text>
+            <Text className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {t('finance.noExpensesHint')}
             </Text>
           </View>
         ) : (
@@ -142,32 +138,32 @@ export function FinanceScreen() {
               <View
                 key={expense.id}
                 className={`overflow-hidden rounded-2xl border ${
-                  expense.isVerified ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-white'
+                  expense.isVerified ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-white dark:bg-dark-surface'
                 }`}>
                 <View className="flex-row items-center justify-between px-4 py-4">
                   <View className="flex-1">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-base font-semibold text-ink">{expense.title}</Text>
+                      <Text className="text-base font-semibold text-ink dark:text-dark-ink">{expense.title}</Text>
                       {expense.isVerified && (
                         <Ionicons name="checkmark-circle" size={18} color="#10b981" />
                       )}
                     </View>
                     <View className="mt-1 flex-row items-center gap-2">
-                      <Text className="text-sm text-slate-600">{formatDate(expense.date)}</Text>
+                      <Text className="text-sm text-slate-600 dark:text-slate-400">{formatDate(expense.date)}</Text>
                       <View className="flex-row items-center gap-1">
                         <View
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: CATEGORY_COLORS[expense.category] }}
                         />
-                        <Text className="text-sm text-slate-600">
+                        <Text className="text-sm text-slate-600 dark:text-slate-400">
                           {expense.category === 'custom' && expense.customCategory
                             ? expense.customCategory
-                            : CATEGORY_LABELS[expense.category]}
+                            : t(`finance.categories.${expense.category}`)}
                         </Text>
                       </View>
                     </View>
                   </View>
-                  <Text className="text-base font-bold text-ink">-${expense.amount.toFixed(2)}</Text>
+                  <Text className="text-base font-bold text-ink dark:text-dark-ink">-${expense.amount.toFixed(2)}</Text>
                 </View>
                 <View className="flex-row border-t border-border px-4 py-2">
                   <Pressable
@@ -180,9 +176,9 @@ export function FinanceScreen() {
                     />
                     <Text
                       className={`text-sm font-medium ${
-                        expense.isVerified ? 'text-slate-600' : 'text-emerald-700'
+                        expense.isVerified ? 'text-slate-600 dark:text-slate-400' : 'text-emerald-700 dark:text-emerald-400'
                       }`}>
-                      {expense.isVerified ? 'Desmarcar' : 'Verificar'}
+                      {expense.isVerified ? t('finance.unverify') : t('finance.verify')}
                     </Text>
                   </Pressable>
                   <View className="w-px bg-border" />
@@ -190,14 +186,14 @@ export function FinanceScreen() {
                     onPress={() => handleEditExpense(expense.id)}
                     className="flex-1 flex-row items-center justify-center gap-2 py-2">
                     <Ionicons name="create" size={18} color="#3b82f6" />
-                    <Text className="text-sm font-medium text-blue-700">Editar</Text>
+                    <Text className="text-sm font-medium text-blue-700 dark:text-white">{t('common.edit')}</Text>
                   </Pressable>
                   <View className="w-px bg-border" />
                   <Pressable
                     onPress={() => handleDeleteExpense(expense.id)}
                     className="flex-1 flex-row items-center justify-center gap-2 py-2">
                     <Ionicons name="trash" size={18} color="#ef4444" />
-                    <Text className="text-sm font-medium text-red-700">Eliminar</Text>
+                    <Text className="text-sm font-medium text-red-700 dark:text-red-400">{t('common.delete')}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -209,10 +205,10 @@ export function FinanceScreen() {
 
       <ConfirmDialog
         visible={isDeleteDialogVisible}
-        title="Eliminar gasto"
-        message="¿Estás seguro de que quieres eliminar este gasto? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        title={t('finance.deleteTitle')}
+        message={t('finance.deleteMessage')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         onConfirm={confirmDeleteExpense}
         onCancel={cancelDeleteExpense}
         destructive

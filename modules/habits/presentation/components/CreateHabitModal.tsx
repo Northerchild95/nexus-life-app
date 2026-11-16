@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/core/components/Button';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState<HabitFrequency>('daily');
@@ -27,7 +29,7 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
     
     const parsedTargetCount = parseInt(targetCount, 10);
     if (isNaN(parsedTargetCount) || parsedTargetCount < 1) {
-      setTargetCountError('El número de días debe ser al menos 1');
+      setTargetCountError(t('habits.errorTargetCount'));
       return;
     }
     
@@ -51,7 +53,7 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
       onSuccess();
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error creating habit';
+      const message = error instanceof Error ? error.message : t('habits.errorCreating');
       setError(message);
     }
   };
@@ -75,40 +77,40 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
       <Pressable className="flex-1 bg-black/50" onPress={handleClose}>
         <Pressable className="flex-1 items-center justify-center p-6" onPress={(e) => e.stopPropagation()}>
           <Card className="w-full max-w-md gap-4 p-6">
-            <Text className="text-2xl font-bold text-ink">Nuevo hábito</Text>
+            <Text className="text-2xl font-bold text-ink dark:text-dark-ink">{t('habits.newHabit')}</Text>
 
             <Input
-              label="Título"
+              label={t('habits.titleLabel')}
               value={title}
               onChangeText={setTitle}
-              placeholder="¿Qué hábito quieres crear?"
+              placeholder={t('habits.titlePlaceholderCreate')}
               error={error || undefined}
             />
 
             <Input
-              label="Descripción (opcional)"
+              label={t('habits.descriptionOptional')}
               value={description}
               onChangeText={setDescription}
-              placeholder="Agrega más detalles..."
+              placeholder={t('habits.descriptionPlaceholder')}
             />
 
             <View className="gap-2">
-              <Text className="text-sm font-medium text-slate-700">Frecuencia</Text>
+              <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('habits.frequency')}</Text>
               <View className="flex-row gap-2">
                 {(['daily', 'weekly', 'monthly'] as HabitFrequency[]).map((f) => (
                   <Pressable
                     key={f}
                     className={`flex-1 rounded-xl border px-4 py-3 ${
                       frequency === f
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-border bg-white'
+                        ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900/30'
+                        : 'border-border bg-white dark:bg-dark-surface'
                     }`}
                     onPress={() => setFrequency(f)}>
                     <Text
                       className={`text-center text-sm font-semibold ${
-                        frequency === f ? 'text-emerald-700' : 'text-slate-700'
+                        frequency === f ? 'text-emerald-700 dark:text-emerald-200' : 'text-slate-700 dark:text-slate-300'
                       }`}>
-                      {f === 'daily' ? 'Diario' : f === 'weekly' ? 'Semanal' : 'Mensual'}
+                      {f === 'daily' ? t('habits.daily') : f === 'weekly' ? t('habits.weekly') : t('habits.monthly')}
                     </Text>
                   </Pressable>
                 ))}
@@ -116,7 +118,7 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
             </View>
 
             <Input
-              label="Veces objetivo"
+              label={t('habits.targetTimes')}
               value={targetCount}
               onChangeText={setTargetCount}
               placeholder="1"
@@ -126,14 +128,14 @@ export function CreateHabitModal({ visible, onClose, onSuccess }: Props) {
             <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
                 <Button
-                  label="Cancelar"
+                  label={t('common.cancel')}
                   onPress={handleClose}
                   variant="secondary"
                 />
               </View>
               <View className="flex-1">
                 <Button
-                  label="Crear hábito"
+                  label={t('habits.createHabitButton')}
                   onPress={handleSubmit}
                   loading={isLoading}
                   disabled={!title.trim() || isLoading}

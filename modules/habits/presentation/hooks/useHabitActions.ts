@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { createHabitsRepository } from '@/modules/habits/data/repositories';
 import type { UpdateHabitParams } from '@/modules/habits/domain/repositories';
@@ -24,6 +25,7 @@ type State = {
 };
 
 export function useHabitActions() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const habitsRepository = createHabitsRepository();
   const updateHabitUseCase = new UpdateHabitUseCase(habitsRepository);
@@ -37,11 +39,11 @@ export function useHabitActions() {
       setState({ isLoading: false, error: null });
       return habit;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error updating habit';
+      const message = error instanceof Error ? error.message : t('habits.errorUpdating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [updateHabitUseCase]);
+  }, [updateHabitUseCase, t]);
 
   const deleteHabit = useCallback(async (id: string) => {
     setState({ isLoading: true, error: null });
@@ -50,11 +52,11 @@ export function useHabitActions() {
       await deleteHabitUseCase.execute(id);
       setState({ isLoading: false, error: null });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error deleting habit';
+      const message = error instanceof Error ? error.message : t('habits.errorDeleting');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [deleteHabitUseCase]);
+  }, [deleteHabitUseCase, t]);
 
   const completeHabit = useCallback(async (id: string) => {
     setState({ isLoading: true, error: null });
@@ -62,7 +64,7 @@ export function useHabitActions() {
     try {
       const habitsRepository = createHabitsRepository();
       const habit = await habitsRepository.getById(id);
-      if (!habit) throw new Error('Habit not found');
+      if (!habit) throw new Error(t('habits.errorNotFound'));
 
       const today = new Date().toISOString();
 
@@ -88,11 +90,11 @@ export function useHabitActions() {
       setState({ isLoading: false, error: null });
       return updated;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error completing habit';
+      const message = error instanceof Error ? error.message : t('habits.errorCompleting');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [updateHabitUseCase]);
+  }, [updateHabitUseCase, t]);
 
   return {
     updateHabit,

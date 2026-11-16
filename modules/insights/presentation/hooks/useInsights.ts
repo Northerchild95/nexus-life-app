@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import { createInsightsRepository } from '@/modules/insights/data/repositories';
 import { GetInsightsUseCase, GetWeeklyTrendsUseCase } from '@/modules/insights/domain/useCases';
@@ -12,6 +13,7 @@ type State = {
 };
 
 export function useInsights() {
+  const { t, i18n } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: true, error: null, insight: null });
 
   const getInsightsUseCase = useMemo(() => {
@@ -30,10 +32,10 @@ export function useInsights() {
       const insight = await getInsightsUseCase.execute(today);
       setState({ isLoading: false, error: null, insight });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error loading insights';
+      const message = error instanceof Error ? error.message : t('dashboard.insightsPanel.error');
       setState({ isLoading: false, error: message, insight: null });
     }
-  }, [getInsightsUseCase]);
+  }, [getInsightsUseCase, t, i18n.language]);
 
   useEffect(() => {
     void loadInsights();

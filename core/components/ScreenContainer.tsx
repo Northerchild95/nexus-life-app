@@ -20,11 +20,11 @@ export function ScreenContainer({
   scrollProps,
 }: Props) {
   const content = (
-    <View className={cn('flex-1 bg-surface px-5 pt-6 pb-8', contentClassName)}>{children}</View>
+    <View className={cn('flex-1 bg-surface dark:bg-dark-surface px-5 pt-6 pb-8', contentClassName)}>{children}</View>
   );
 
   return (
-    <SafeAreaView className={cn('flex-1 bg-surface', className)}>
+    <SafeAreaView className={cn('flex-1 bg-surface dark:bg-dark-surface', className)}>
       {scrollable ? (
         <ScrollView
           className="flex-1"

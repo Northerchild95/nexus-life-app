@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/core/i18n/i18n';
 import type { FocusSession } from '../../domain/entities/FocusSession';
 import type { FocusSessionRepository } from '../../domain/repositories/FocusSessionRepository';
 
@@ -52,7 +53,7 @@ export class FocusSessionRepositoryImpl implements FocusSessionRepository {
         sessions[index] = session;
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
       } else {
-        throw new Error('Session not found for update');
+        throw new Error(i18n.t('dashboard.focus.errors.updateNotFound'));
       }
     } catch (error) {
       console.error('Error updating focus session:', error);

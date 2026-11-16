@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { CreateHabitUseCase, GetHabitsUseCase } from '@/modules/habits/domain/useCases';
 import { createHabitsRepository } from '@/modules/habits/data/repositories';
@@ -10,6 +11,7 @@ type State = {
 };
 
 export function useCreateHabit() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const habitsRepository = createHabitsRepository();
   const createHabitUseCase = new CreateHabitUseCase(habitsRepository);
@@ -23,11 +25,11 @@ export function useCreateHabit() {
       setState({ isLoading: false, error: null });
       return habit;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error creating habit';
+      const message = error instanceof Error ? error.message : t('habits.errorCreating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [createHabitUseCase]);
+  }, [createHabitUseCase, t]);
 
   return {
     createHabit,

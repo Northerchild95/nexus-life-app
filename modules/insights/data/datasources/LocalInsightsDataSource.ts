@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type { Expense, ExpenseCategory } from '@/modules/finance/domain/entities';
 import type { Habit } from '@/modules/habits/domain/entities';
 import type { Task } from '@/modules/tasks/domain/entities';
@@ -6,17 +7,8 @@ import { createExpenseRepository } from '@/modules/finance/data/repositories';
 import { createHabitsRepository } from '@/modules/habits/data/repositories';
 import { createTasksRepository } from '@/modules/tasks/data/repositories';
 
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  food: 'Comida',
-  transport: 'Transporte',
-  entertainment: 'Entretenimiento',
-  shopping: 'Compras',
-  health: 'Salud',
-  bills: 'Facturas',
-  education: 'Educación',
-  other: 'Otros',
-  custom: 'Personalizada',
-};
+const getCategoryLabel = (category: ExpenseCategory): string =>
+  i18n.t(`finance.categories.${category}`);
 
 export class LocalInsightsDataSource {
   private tasksRepository = createTasksRepository();
@@ -84,13 +76,13 @@ export class LocalInsightsDataSource {
     const categoryTotals = todayExpenses.reduce((acc, expense) => {
       const category = expense.category === 'custom' && expense.customCategory
         ? expense.customCategory
-        : CATEGORY_LABELS[expense.category];
+        : getCategoryLabel(expense.category);
       acc[category] = (acc[category] || 0) + expense.amount;
       return acc;
     }, {} as Record<string, number>);
 
     const entries = Object.entries(categoryTotals);
-    const topCategory = entries.length > 0 ? entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : 'N/A';
+    const topCategory = entries.length > 0 ? entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : i18n.t('insights.notAvailable');
     const topCategoryAmount = entries.length > 0 ? Math.max(...Object.values(categoryTotals)) : 0;
 
     return {
@@ -145,8 +137,8 @@ export class LocalInsightsDataSource {
     if (tasks.some((t) => t.status === 'completed')) {
       achievements.push({
         id: 'first_task',
-        title: 'Primera Tarea',
-        description: 'Completaste tu primera tarea',
+        title: i18n.t('insights.achievement.firstTaskTitle'),
+        description: i18n.t('insights.achievement.firstTaskDescription'),
         icon: 'checkmark-circle',
         unlocked: true,
       });
@@ -157,8 +149,8 @@ export class LocalInsightsDataSource {
     if (habitWithStreak) {
       achievements.push({
         id: 'habit_streak',
-        title: 'Racha de Hábito',
-        description: `Mantuviste un hábito por 3 días`,
+        title: i18n.t('insights.achievement.habitStreakTitle'),
+        description: i18n.t('insights.achievement.habitStreakDescription'),
         icon: 'flame',
         unlocked: true,
       });
@@ -168,8 +160,8 @@ export class LocalInsightsDataSource {
     if (expenses.length >= 5) {
       achievements.push({
         id: 'financial_tracker',
-        title: 'Rastreador Financiero',
-        description: 'Registraste 5 gastos',
+        title: i18n.t('insights.achievement.financialTrackerTitle'),
+        description: i18n.t('insights.achievement.financialTrackerDescription'),
         icon: 'wallet',
         unlocked: true,
       });
@@ -180,8 +172,8 @@ export class LocalInsightsDataSource {
     if (verifiedCount >= 3) {
       achievements.push({
         id: 'verified_expenses',
-        title: 'Gastos Verificados',
-        description: 'Verificaste 3 gastos',
+        title: i18n.t('insights.achievement.verifiedExpensesTitle'),
+        description: i18n.t('insights.achievement.verifiedExpensesDescription'),
         icon: 'checkmark-done',
         unlocked: true,
       });

@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/core/store/appStore';
 import { createAuthRepository } from '@/modules/auth/data/repositories/createAuthRepository';
 import { LoginUseCase } from '@/modules/auth/domain/useCases/LoginUseCase';
 
 export function useLogin() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('demo@nexuslife.app');
   const [password, setPassword] = useState('Password123');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,13 +27,13 @@ export function useLogin() {
     const nextFieldErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      nextFieldErrors.email = 'Enter your email';
+      nextFieldErrors.email = t('auth.enterEmail');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      nextFieldErrors.email = 'Use a valid email address';
+      nextFieldErrors.email = t('auth.useValidEmail');
     }
 
     if (!password.trim()) {
-      nextFieldErrors.password = 'Enter your password';
+      nextFieldErrors.password = t('auth.enterPassword');
     }
 
     setFieldErrors(nextFieldErrors);
@@ -45,9 +47,9 @@ export function useLogin() {
     try {
       const session = await loginUseCase.execute({ email, password });
       setSession(session);
-      setSuccessMessage(`Welcome back, ${session.user.name}`);
+      setSuccessMessage(t('auth.welcomeBackUser', { name: session.user.name }));
     } catch (exception) {
-      const message = exception instanceof Error ? exception.message : 'Unable to login';
+      const message = exception instanceof Error ? exception.message : t('auth.unableToLogin');
       setError(message);
     } finally {
       setAuthLoading(false);

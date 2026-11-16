@@ -1,4 +1,5 @@
 import AsyncStorage from '@/core/utils/async-storage';
+import i18n from '@/core/i18n/i18n';
 
 import type {
   AuthSession,
@@ -36,11 +37,11 @@ export class LocalAuthDataSource {
     const user = users.find((entry) => entry.email === email);
 
     if (!user) {
-      throw new Error('No account found with this email');
+      throw new Error(i18n.t('auth.errors.accountNotFound'));
     }
 
     if (user.password !== password) {
-      throw new Error('Incorrect password');
+      throw new Error(i18n.t('auth.errors.incorrectPassword'));
     }
 
     return this.createSession(user);
@@ -53,7 +54,7 @@ export class LocalAuthDataSource {
     const existingUser = users.find((entry) => entry.email === email);
 
     if (existingUser) {
-      throw new Error('An account with this email already exists');
+      throw new Error(i18n.t('auth.errors.accountExists'));
     }
 
     const newUser: StoredAuthUser = {

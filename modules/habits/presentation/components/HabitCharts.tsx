@@ -1,11 +1,16 @@
 import { Dimensions, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 
 import { Card } from '@/core/components/Card';
+import { useIsDarkMode } from '@/core/theme/useThemeSync';
 
 const screenWidth = Dimensions.get('window').width;
 
 export function HabitCharts({ habits }: { habits: Array<{ title: string; currentCount: number; targetCount: number }> }) {
+  const { t } = useTranslation();
+  const isDark = useIsDarkMode();
+
   if (habits.length === 0) {
     return null;
   }
@@ -15,15 +20,25 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
 
   // Weekly consistency data (simulated for now)
   const weeklyData = [60, 75, 80, 65, 90, 85, 70];
-  const weekLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const weekLabels = [
+    t('habits.weekdays.mon'),
+    t('habits.weekdays.tue'),
+    t('habits.weekdays.wed'),
+    t('habits.weekdays.thu'),
+    t('habits.weekdays.fri'),
+    t('habits.weekdays.sat'),
+    t('habits.weekdays.sun'),
+  ];
 
   const chartConfig = {
-    backgroundColor: '#ffffff',
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
+    backgroundColor: isDark ? '#242730' : '#ffffff',
+    backgroundGradientFrom: isDark ? '#242730' : '#ffffff',
+    backgroundGradientTo: isDark ? '#242730' : '#ffffff',
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(71, 85, 105, ${opacity})`,
+    color: (opacity = 1) =>
+      isDark ? `rgba(134, 176, 255, ${opacity})` : `rgba(59, 130, 246, ${opacity})`,
+    labelColor: (opacity = 1) =>
+      isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(71, 85, 105, ${opacity})`,
     style: {
       borderRadius: 16,
     },
@@ -34,7 +49,7 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
       <View className="flex-row gap-4" style={{ width: screenWidth * 1.5 }}>
         {/* Progress Chart */}
         <Card className="flex-1 gap-3 p-1">
-          <Text className="text-lg font-semibold text-ink">Progreso hoy</Text>
+          <Text className="text-lg font-semibold text-ink dark:text-dark-ink">{t('habits.progressChartTitle')}</Text>
           <BarChart
              data={{
                 labels: habitLabels,
@@ -57,14 +72,14 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
               paddingRight: 35,
             }}
           />
-          <Text className="text-sm text-slate-600 text-center">
-            Porcentaje de completación por hábito
+          <Text className="text-sm text-slate-600 dark:text-slate-400 text-center">
+            {t('habits.progressChartCaption')}
           </Text>
         </Card>
 
         {/* Weekly Consistency Chart */}
         <Card className="flex-1 gap-3 p-4">
-          <Text className="text-lg font-semibold text-ink">Consistencia semanal</Text>
+          <Text className="text-lg font-semibold text-ink dark:text-dark-ink">{t('habits.weeklyChartTitle')}</Text>
           <LineChart
             data={{
               labels: weekLabels,
@@ -89,8 +104,8 @@ export function HabitCharts({ habits }: { habits: Array<{ title: string; current
               paddingRight: 45,
             }}
           />
-          <Text className="text-sm text-slate-600 text-center">
-            Tendencia de hábitos completados esta semana
+          <Text className="text-sm text-slate-600 dark:text-slate-400 text-center">
+            {t('habits.weeklyChartCaption')}
           </Text>
         </Card>
       </View>

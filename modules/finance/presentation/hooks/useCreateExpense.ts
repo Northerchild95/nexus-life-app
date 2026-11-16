@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { createExpenseRepository } from '@/modules/finance/data/repositories';
 import type { CreateExpenseParams } from '@/modules/finance/domain/repositories';
@@ -10,6 +11,7 @@ type State = {
 };
 
 export function useCreateExpense() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const expenseRepository = createExpenseRepository();
   const createExpenseUseCase = new CreateExpenseUseCase(expenseRepository);
@@ -23,11 +25,11 @@ export function useCreateExpense() {
       setState({ isLoading: false, error: null });
       return expense;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error creating expense';
+      const message = error instanceof Error ? error.message : t('finance.errorCreating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [createExpenseUseCase]);
+  }, [createExpenseUseCase, t]);
 
   return {
     createExpense,

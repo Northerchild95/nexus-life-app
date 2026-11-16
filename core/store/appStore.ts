@@ -2,9 +2,11 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import AsyncStorage from '@/core/utils/async-storage';
+import { colorScheme } from 'nativewind';
+import i18n, { type AppLanguage } from '@/core/i18n/i18n';
 import type { User } from '@/modules/auth/domain/entities/User';
 
-type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 type SessionState = {
   user: User | null;
@@ -18,6 +20,7 @@ type LoadingState = {
 
 type UiState = {
   theme: ThemeMode;
+  language: AppLanguage;
 };
 
 type AppState = {
@@ -28,6 +31,7 @@ type AppState = {
   clearSession: () => void;
   setAuthLoading: (value: boolean) => void;
   setTheme: (theme: ThemeMode) => void;
+  setLanguage: (language: AppLanguage) => void;
 };
 
 export const useAppStore = create<AppState>()(
@@ -42,7 +46,8 @@ export const useAppStore = create<AppState>()(
         auth: false,
       },
       ui: {
-        theme: 'light',
+        theme: 'system',
+        language: 'en',
       },
       setSession: ({ user, token }) =>
         set({
@@ -67,13 +72,24 @@ export const useAppStore = create<AppState>()(
             auth: value,
           },
         })),
-      setTheme: (theme) =>
+      setTheme: (theme) => {
+        colorScheme.set(theme);
         set((state) => ({
           ui: {
             ...state.ui,
             theme,
           },
-        })),
+        }));
+      },
+      setLanguage: (language) => {
+        void i18n.changeLanguage(language);
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            language,
+          },
+        }));
+      },
     }),
     {
       name: 'nexus-life:app-store',
@@ -82,6 +98,17 @@ export const useAppStore = create<AppState>()(
         session: state.session,
         ui: state.ui,
       }),
+      // The theme lives in AsyncStorage and is rehydrated asynchronously.
+      // Apply it as soon as it is available so a cold start uses the saved
+      // theme instead of the OS one until the user touches the toggle.
+      onRehydrateStorage: () => (state) => {
+        if (state?.ui.theme) {
+          colorScheme.set(state.ui.theme);
+        }
+        if (state?.ui.language) {
+          void i18n.changeLanguage(state.ui.language);
+        }
+      },
     },
   ),
 );

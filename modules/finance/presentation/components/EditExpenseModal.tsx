@@ -1,6 +1,7 @@
 import type { NavigationProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/core/components/Button';
@@ -19,19 +20,20 @@ type Props = {
   onSuccess: () => void;
 };
 
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  food: 'Comida',
-  transport: 'Transporte',
-  entertainment: 'Entretenimiento',
-  shopping: 'Compras',
-  health: 'Salud',
-  bills: 'Facturas',
-  education: 'Educación',
-  other: 'Otros',
-  custom: 'Personalizada',
-};
+const CATEGORY_KEYS = [
+  'food',
+  'transport',
+  'entertainment',
+  'shopping',
+  'health',
+  'bills',
+  'education',
+  'other',
+  'custom',
+] as ExpenseCategory[];
 
 export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Props) {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<MainTabParamList>>();
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -72,12 +74,12 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('El monto debe ser mayor a 0');
+      setError(t('finance.errorAmount'));
       return;
     }
 
     if (category === 'custom' && !customCategory.trim()) {
-      setError('Debes especificar el nombre de la categoría personalizada');
+      setError(t('finance.errorCustomCategory'));
       return;
     }
 
@@ -103,7 +105,7 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
       // Navigate to Finance screen
       navigation.navigate('Finance' as never);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error updating expense';
+      const message = error instanceof Error ? error.message : t('finance.errorUpdating');
       setError(message);
     }
   };
@@ -127,18 +129,18 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
       <Pressable className="flex-1 bg-black/50" onPress={handleClose}>
         <Pressable className="flex-1 items-center justify-center p-6" onPress={(e) => e.stopPropagation()}>
           <Card className="w-full max-w-md gap-4 p-6">
-            <Text className="text-2xl font-bold text-ink">Editar gasto</Text>
+            <Text className="text-2xl font-bold text-ink dark:text-dark-ink">{t('finance.editExpenseTitle')}</Text>
 
             <Input
-              label="Título"
+              label={t('finance.titleLabel')}
               value={title}
               onChangeText={setTitle}
-              placeholder="¿Qué es este gasto?"
+              placeholder={t('finance.titlePlaceholder')}
               error={error || undefined}
             />
 
             <Input
-              label="Monto"
+              label={t('finance.amountLabel')}
               value={amount}
               onChangeText={setAmount}
               placeholder="0.00"
@@ -146,29 +148,29 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
             />
 
             <Input
-              label="Fecha"
+              label={t('finance.dateLabel')}
               value={date}
               onChangeText={setDate}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('finance.datePlaceholder')}
             />
 
             <View className="gap-2">
-              <Text className="text-sm font-medium text-slate-700">Categoría</Text>
+              <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('finance.categoryLabel')}</Text>
               <View className="flex-row flex-wrap gap-2">
-                {(['food', 'transport', 'entertainment', 'shopping', 'health', 'bills', 'education', 'other', 'custom'] as ExpenseCategory[]).map((cat) => (
+                {CATEGORY_KEYS.map((cat) => (
                   <Pressable
                     key={cat}
                     className={`rounded-xl border px-3 py-2 ${
                       category === cat
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-border bg-white'
+                        ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
+                        : 'border-border bg-white dark:bg-dark-surface'
                     }`}
                     onPress={() => setCategory(cat)}>
                     <Text
                       className={`text-xs font-semibold ${
-                        category === cat ? 'text-blue-700' : 'text-slate-700'
+                        category === cat ? 'text-blue-700 dark:text-blue-200' : 'text-slate-700 dark:text-slate-300'
                       }`}>
-                      {CATEGORY_LABELS[cat]}
+                      {t(`finance.categories.${cat}`)}
                     </Text>
                   </Pressable>
                 ))}
@@ -177,10 +179,10 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
 
             {category === 'custom' && (
               <Input
-                label="Nombre de categoría"
+                label={t('finance.customCategoryLabel')}
                 value={customCategory}
                 onChangeText={setCustomCategory}
-                placeholder="Ej: Mascotas, Viajes, etc."
+                placeholder={t('finance.customCategoryPlaceholder')}
                 error={error || undefined}
               />
             )}
@@ -188,14 +190,14 @@ export function EditExpenseModal({ visible, expenseId, onClose, onSuccess }: Pro
             <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
                 <Button
-                  label="Cancelar"
+                  label={t('common.cancel')}
                   onPress={handleClose}
                   variant="secondary"
                 />
               </View>
               <View className="flex-1">
                 <Button
-                  label="Guardar cambios"
+                  label={t('finance.saveChanges')}
                   onPress={handleSubmit}
                   loading={isLoading}
                   disabled={!title.trim() || !amount || isLoading}

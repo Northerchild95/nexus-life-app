@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { createExpenseRepository } from '@/modules/finance/data/repositories';
 import type { UpdateExpenseParams } from '@/modules/finance/domain/repositories';
@@ -10,6 +11,7 @@ type State = {
 };
 
 export function useExpenseActions() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const expenseRepository = createExpenseRepository();
   const updateExpenseUseCase = new UpdateExpenseUseCase(expenseRepository);
@@ -23,11 +25,11 @@ export function useExpenseActions() {
       setState({ isLoading: false, error: null });
       return expense;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error updating expense';
+      const message = error instanceof Error ? error.message : t('finance.errorUpdating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [updateExpenseUseCase]);
+  }, [updateExpenseUseCase, t]);
 
   const deleteExpense = useCallback(async (id: string) => {
     setState({ isLoading: true, error: null });
@@ -36,11 +38,11 @@ export function useExpenseActions() {
       await deleteExpenseUseCase.execute(id);
       setState({ isLoading: false, error: null });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error deleting expense';
+      const message = error instanceof Error ? error.message : t('finance.errorDeleting');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [deleteExpenseUseCase]);
+  }, [deleteExpenseUseCase, t]);
 
   return {
     updateExpense,

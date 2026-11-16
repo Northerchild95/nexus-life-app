@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   visible: boolean;
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export function FocusAlert({ visible, title, message, onConfirm }: Props) {
+  const { t } = useTranslation();
+
   if (!visible) return null;
 
   return (
@@ -19,7 +22,7 @@ export function FocusAlert({ visible, title, message, onConfirm }: Props) {
           onPress={onConfirm}
           activeOpacity={0.7}
           style={{ minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#3b82f6', marginTop: 8 }}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>OK</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>{t('common.ok')}</Text>
         </TouchableOpacity>
       </View>
     </View>

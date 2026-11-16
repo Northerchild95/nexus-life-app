@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { Card } from '@/core/components/Card';
@@ -20,9 +21,11 @@ const getIconForType = (type: DashboardMetric['type']): { icon: keyof typeof Ion
 };
 
 export function DailySummary({ metrics }: Props) {
+  const { t } = useTranslation();
+
   return (
     <View className="gap-3">
-      <Text className="text-xl font-semibold text-ink">Resumen del dia</Text>
+      <Text className="text-xl font-semibold text-ink dark:text-dark-ink">{t('dashboard.dailySummary')}</Text>
       <View className="flex-row gap-3">
         {metrics.map((metric) => {
           const { icon, iconClassName, iconColor } = getIconForType(metric.type);
@@ -33,9 +36,9 @@ export function DailySummary({ metrics }: Props) {
                 <Ionicons name={icon} color={iconColor} size={20} />
               </View>
               <View>
-                <Text className="text-sm font-medium text-muted">{metric.label}</Text>
-                <Text className="mt-1 text-2xl font-bold text-ink">{metric.value}</Text>
-                <Text className="mt-1 text-sm leading-5 text-slate-600">{metric.caption}</Text>
+                <Text className="text-sm font-medium text-muted dark:text-dark-muted">{metric.label}</Text>
+                <Text className="mt-1 text-2xl font-bold text-ink dark:text-dark-ink">{metric.value}</Text>
+                <Text className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-400">{metric.caption}</Text>
               </View>
             </Card>
           );

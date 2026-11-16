@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type { AuthRepository, LoginParams } from '@/modules/auth/domain/repositories/AuthRepository';
 
 export class LoginUseCase {
@@ -5,15 +6,15 @@ export class LoginUseCase {
 
   async execute(params: LoginParams) {
     if (!params.email.trim()) {
-      throw new Error('Email is required');
+      throw new Error(i18n.t('auth.errors.emailRequired'));
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(params.email)) {
-      throw new Error('Email format is invalid');
+      throw new Error(i18n.t('auth.errors.emailInvalid'));
     }
 
     if (!params.password.trim()) {
-      throw new Error('Password is required');
+      throw new Error(i18n.t('auth.errors.passwordRequired'));
     }
 
     return this.authRepository.login({

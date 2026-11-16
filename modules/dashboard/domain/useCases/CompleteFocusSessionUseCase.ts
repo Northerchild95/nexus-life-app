@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type { FocusSession } from '@/modules/dashboard/domain/entities/FocusSession';
 import type { FocusSessionRepository } from '@/modules/dashboard/domain/repositories/FocusSessionRepository';
 
@@ -7,7 +8,7 @@ export class CompleteFocusSessionUseCase {
   async execute(sessionId: string): Promise<FocusSession> {
     const session = await this.repository.getById(sessionId);
     if (!session) {
-      throw new Error('Sesión no encontrada');
+      throw new Error(i18n.t('dashboard.focus.errors.sessionNotFound'));
     }
 
     const now = Date.now();

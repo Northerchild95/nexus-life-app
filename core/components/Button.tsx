@@ -32,8 +32,8 @@ export function Button({
           className={cn(
             'min-h-12 items-center justify-center rounded-2xl px-4',
             isPrimary && 'bg-brand-600 shadow-lift',
-            variant === 'secondary' && 'border border-border bg-white',
-            isTonal && 'bg-brand-100',
+            variant === 'secondary' && 'border border-border dark:border-dark-border bg-white dark:bg-dark-surface',
+            isTonal && 'bg-brand-100 dark:bg-brand-900/30',
             isText && 'bg-transparent',
             isDestructive && 'bg-red-600 shadow-lift',
             pressed && !disabled && 'opacity-90',
@@ -48,9 +48,9 @@ export function Button({
               className={cn(
                 'text-base font-semibold',
                 isPrimary && 'text-white',
-                variant === 'secondary' && 'text-ink',
-                isTonal && 'text-brand-700',
-                isText && 'text-brand-700',
+                variant === 'secondary' && 'text-ink dark:text-dark-ink',
+                isTonal && 'text-brand-700 dark:text-brand-400',
+                isText && 'text-brand-700 dark:text-brand-400',
                 isDestructive && 'text-white',
               )}>
               {label}

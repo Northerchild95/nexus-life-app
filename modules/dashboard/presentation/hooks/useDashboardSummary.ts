@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/core/store/appStore';
 import { createDashboardRepository } from '@/modules/dashboard/data/repositories';
@@ -17,6 +18,7 @@ const initialState: DashboardSummaryState = {
 };
 
 export function useDashboardSummary(): DashboardSummaryViewModel {
+  const { t, i18n } = useTranslation();
   const userName = useAppStore((state) => state.session.user?.name);
   const [state, setState] = useState<DashboardSummaryState>(initialState);
 
@@ -44,7 +46,7 @@ export function useDashboardSummary(): DashboardSummaryViewModel {
       });
     } catch (exception) {
       const message =
-        exception instanceof Error ? exception.message : 'Unable to load dashboard summary';
+        exception instanceof Error ? exception.message : t('dashboard.errorLoadingSummary');
 
       setState((current) => ({
         ...current,
@@ -52,7 +54,7 @@ export function useDashboardSummary(): DashboardSummaryViewModel {
         error: message,
       }));
     }
-  }, [getDashboardSummaryUseCase, userName]);
+  }, [getDashboardSummaryUseCase, userName, t, i18n.language]);
 
   useEffect(() => {
     void refresh();

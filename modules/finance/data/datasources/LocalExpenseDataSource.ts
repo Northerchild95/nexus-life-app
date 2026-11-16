@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import i18n from '@/core/i18n/i18n';
 import type { Expense } from '../../domain/entities';
 import type { CreateExpenseParams, UpdateExpenseParams } from '../../domain/repositories';
 
@@ -68,7 +69,7 @@ export class LocalExpenseDataSource {
     const expenseIndex = expenses.findIndex((expense) => expense.id === id);
 
     if (expenseIndex === -1) {
-      throw new Error(`Expense with id ${id} not found`);
+      throw new Error(i18n.t('finance.errorNotFound'));
     }
 
     const updatedExpense: Expense = {

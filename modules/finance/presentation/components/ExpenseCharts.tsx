@@ -1,22 +1,12 @@
 import { Dimensions, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { PieChart } from 'react-native-chart-kit';
 
 import { Card } from '@/core/components/Card';
-import type { Expense, ExpenseCategory } from '../../domain/entities';
+import { useIsDarkMode } from '@/core/theme/useThemeSync';
+import type { Expense } from '../../domain/entities';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  food: 'Comida',
-  transport: 'Transporte',
-  entertainment: 'Entretenimiento',
-  shopping: 'Compras',
-  health: 'Salud',
-  bills: 'Facturas',
-  education: 'Educación',
-  other: 'Otros',
-  custom: 'Personalizada',
-};
 
 const CHART_COLORS = [
   '#ef4444', // red
@@ -35,6 +25,9 @@ type Props = {
 };
 
 export function ExpenseCharts({ expenses }: Props) {
+  const { t } = useTranslation();
+  const isDark = useIsDarkMode();
+
   if (expenses.length === 0) {
     return null;
   }
@@ -43,7 +36,7 @@ export function ExpenseCharts({ expenses }: Props) {
   const categoryTotals = expenses.reduce((acc, expense) => {
     const category = expense.category === 'custom' && expense.customCategory
       ? expense.customCategory
-      : CATEGORY_LABELS[expense.category];
+      : t(`finance.categories.${expense.category}`);
     acc[category] = (acc[category] || 0) + expense.amount;
     return acc;
   }, {} as Record<string, number>);
@@ -52,7 +45,7 @@ export function ExpenseCharts({ expenses }: Props) {
     name: category,
     amount,
     color: CHART_COLORS[index % CHART_COLORS.length],
-    legendFontColor: '#374151',
+    legendFontColor: isDark ? '#9ca3af' : '#374151',
     legendFontSize: 12,
   }));
 
@@ -60,7 +53,7 @@ export function ExpenseCharts({ expenses }: Props) {
 
   return (
     <Card className="gap-4">
-      <Text className="text-lg font-semibold text-ink">Desglose por categoría</Text>
+      <Text className="text-lg font-semibold text-ink dark:text-dark-ink">{t('finance.breakdownTitle')}</Text>
 
       <View className="pl-0">
         <PieChart
@@ -68,8 +61,10 @@ export function ExpenseCharts({ expenses }: Props) {
           width={SCREEN_WIDTH - 80}
           height={220}
           chartConfig={{
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            color: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
           }}
           accessor="amount"
           backgroundColor="transparent"
@@ -83,7 +78,7 @@ export function ExpenseCharts({ expenses }: Props) {
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-slate-700">Detalle:</Text>
+        <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('finance.detail')}</Text>
         {chartData.map((item) => {
           const percentage = ((item.amount / totalAmount) * 100).toFixed(1);
           return (
@@ -93,11 +88,11 @@ export function ExpenseCharts({ expenses }: Props) {
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <Text className="text-sm text-slate-700">{item.name}</Text>
+                <Text className="text-sm text-slate-700 dark:text-slate-300">{item.name}</Text>
               </View>
               <View className="flex-row items-center gap-3">
-                <Text className="text-sm font-semibold text-slate-700">${item.amount.toFixed(2)}</Text>
-                <Text className="text-sm text-slate-500">{percentage}%</Text>
+                <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">${item.amount.toFixed(2)}</Text>
+                <Text className="text-sm text-slate-500 dark:text-slate-400">{percentage}%</Text>
               </View>
             </View>
           );
@@ -106,8 +101,8 @@ export function ExpenseCharts({ expenses }: Props) {
 
       <View className="border-t border-border pt-3">
         <View className="flex-row items-center justify-between">
-          <Text className="text-base font-semibold text-ink">Total</Text>
-          <Text className="text-lg font-bold text-ink">${totalAmount.toFixed(2)}</Text>
+          <Text className="text-base font-semibold text-ink dark:text-dark-ink">{t('finance.total')}</Text>
+          <Text className="text-lg font-bold text-ink dark:text-dark-ink">${totalAmount.toFixed(2)}</Text>
         </View>
       </View>
     </Card>

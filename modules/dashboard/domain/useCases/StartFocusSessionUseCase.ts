@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type { FocusSession } from '@/modules/dashboard/domain/entities/FocusSession';
 import type { FocusSessionRepository } from '@/modules/dashboard/domain/repositories/FocusSessionRepository';
 
@@ -8,7 +9,7 @@ export class StartFocusSessionUseCase {
     // Check if there's an active session
     const activeSession = await this.repository.getActiveSession();
     if (activeSession) {
-      throw new Error('Ya hay una sesión de focus activa');
+      throw new Error(i18n.t('dashboard.focus.errors.alreadyRunning'));
     }
 
     const session = {

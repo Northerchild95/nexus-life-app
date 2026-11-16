@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type {
   DashboardRepository,
   GetDashboardSummaryParams,
@@ -8,7 +9,7 @@ export class GetDashboardSummaryUseCase {
 
   async execute(params: GetDashboardSummaryParams) {
     if (!params.date.trim()) {
-      throw new Error('Dashboard date is required');
+      throw new Error(i18n.t('dashboard.errorDateRequired'));
     }
 
     return this.dashboardRepository.getSummary({

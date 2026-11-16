@@ -1,3 +1,4 @@
+import i18n from '@/core/i18n/i18n';
 import type { CreateTaskParams, GetTasksParams, TasksRepository, UpdateTaskParams } from '../../domain/repositories';
 import { LocalTasksDataSource } from '../datasources';
 
@@ -15,7 +16,7 @@ export class TasksRepositoryImpl implements TasksRepository {
     );
     
     if (isDuplicate) {
-      throw new Error('Ya existe una tarea activa con este título');
+      throw new Error(i18n.t('tasks.errorDuplicate'));
     }
     
     return this.dataSource.create(params);

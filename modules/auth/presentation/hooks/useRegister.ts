@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/core/store/appStore';
 import { createAuthRepository } from '@/modules/auth/data/repositories/createAuthRepository';
 import { RegisterUseCase } from '@/modules/auth/domain/useCases/RegisterUseCase';
 
 export function useRegister() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,29 +40,29 @@ export function useRegister() {
     } = {};
 
     if (!name.trim()) {
-      nextFieldErrors.name = 'Enter your name';
+      nextFieldErrors.name = t('auth.enterName');
     } else if (name.trim().length < 2) {
-      nextFieldErrors.name = 'Use at least 2 characters';
+      nextFieldErrors.name = t('auth.useAtLeast2');
     }
 
     if (!email.trim()) {
-      nextFieldErrors.email = 'Enter your email';
+      nextFieldErrors.email = t('auth.enterEmail');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      nextFieldErrors.email = 'Use a valid email address';
+      nextFieldErrors.email = t('auth.useValidEmail');
     }
 
     if (!password.trim()) {
-      nextFieldErrors.password = 'Create a password';
+      nextFieldErrors.password = t('auth.createPassword');
     } else if (password.trim().length < 8) {
-      nextFieldErrors.password = 'Use at least 8 characters';
+      nextFieldErrors.password = t('auth.useAtLeast8');
     } else if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      nextFieldErrors.password = 'Add one uppercase letter and one number';
+      nextFieldErrors.password = t('auth.addUpperAndNumber');
     }
 
     if (!confirmPassword.trim()) {
-      nextFieldErrors.confirmPassword = 'Repeat your password';
+      nextFieldErrors.confirmPassword = t('auth.repeatPassword');
     } else if (password !== confirmPassword) {
-      nextFieldErrors.confirmPassword = 'Passwords do not match';
+      nextFieldErrors.confirmPassword = t('auth.errors.passwordMismatch');
     }
 
     setFieldErrors(nextFieldErrors);
@@ -80,9 +82,9 @@ export function useRegister() {
       });
 
       setSession(session);
-      setSuccessMessage(`Account created. Welcome, ${session.user.name}`);
+      setSuccessMessage(t('auth.accountCreated', { name: session.user.name }));
     } catch (exception) {
-      const message = exception instanceof Error ? exception.message : 'Unable to create account';
+      const message = exception instanceof Error ? exception.message : t('auth.unableToCreate');
       setError(message);
     } finally {
       setAuthLoading(false);

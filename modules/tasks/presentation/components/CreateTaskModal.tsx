@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Keyboard, Modal, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/core/components/Button';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function CreateTaskModal({ visible, onClose, onSuccess }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
@@ -40,7 +42,7 @@ export function CreateTaskModal({ visible, onClose, onSuccess }: Props) {
       onSuccess();
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error creating task';
+      const message = error instanceof Error ? error.message : t('tasks.errorCreating');
       setError(message);
     }
   };
@@ -61,40 +63,40 @@ export function CreateTaskModal({ visible, onClose, onSuccess }: Props) {
       <Pressable className="flex-1 bg-black/50" onPress={handleClose}>
         <Pressable className="flex-1 items-center justify-center p-6" onPress={(e) => e.stopPropagation()}>
           <Card className="w-full max-w-md gap-4 p-6">
-            <Text className="text-2xl font-bold text-ink">Nueva tarea</Text>
+            <Text className="text-2xl font-bold text-ink dark:text-dark-ink">{t('tasks.newTask')}</Text>
 
             <Input
-              label="Título"
+              label={t('tasks.titleLabel')}
               value={title}
               onChangeText={setTitle}
-              placeholder="¿Qué necesitas hacer?"
+              placeholder={t('tasks.titlePlaceholder')}
               error={error || undefined}
             />
 
             <Input
-              label="Descripción (opcional)"
+              label={t('tasks.descriptionOptional')}
               value={description}
               onChangeText={setDescription}
-              placeholder="Agrega más detalles..."
+              placeholder={t('tasks.descriptionPlaceholder')}
             />
 
             <View className="gap-2">
-              <Text className="text-sm font-medium text-slate-700">Prioridad</Text>
+              <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('tasks.priorityLabel')}</Text>
               <View className="flex-row gap-2">
                 {(['low', 'medium', 'high'] as TaskPriority[]).map((p) => (
                   <Pressable
                     key={p}
                     className={`flex-1 rounded-xl border px-4 py-3 ${
                       priority === p
-                        ? 'border-brand-500 bg-brand-50'
-                        : 'border-border bg-white'
+                        ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-900/30'
+                        : 'border-border bg-white dark:bg-dark-surface'
                     }`}
                     onPress={() => setPriority(p)}>
                     <Text
                       className={`text-center text-sm font-semibold ${
-                        priority === p ? 'text-brand-700' : 'text-slate-700'
+                        priority === p ? 'text-brand-700 dark:text-brand-200' : 'text-slate-700 dark:text-slate-300'
                       }`}>
-                      {p === 'low' ? 'Baja' : p === 'medium' ? 'Media' : 'Alta'}
+                      {p === 'low' ? t('tasks.low') : p === 'medium' ? t('tasks.medium') : t('tasks.high')}
                     </Text>
                   </Pressable>
                 ))}
@@ -104,14 +106,14 @@ export function CreateTaskModal({ visible, onClose, onSuccess }: Props) {
             <View className="flex-row gap-3 pt-2">
               <View className="flex-1">
                 <Button
-                  label="Cancelar"
+                  label={t('common.cancel')}
                   onPress={handleClose}
                   variant="secondary"
                 />
               </View>
               <View className="flex-1">
                 <Button
-                  label="Crear tarea"
+                  label={t('tasks.createTaskButton')}
                   onPress={handleSubmit}
                   loading={isLoading}
                   disabled={!title.trim() || isLoading}

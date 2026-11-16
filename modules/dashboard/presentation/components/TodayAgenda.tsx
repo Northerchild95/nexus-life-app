@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
 import { Card } from '@/core/components/Card';
@@ -26,18 +27,20 @@ const getAccentForType = (type: DashboardAgendaItem['type']) => {
 };
 
 export function TodayAgenda({ items, onCompleteTask, onDeleteTask, onEditTask, onCompleteHabit, onDeleteHabit, onEditHabit }: Props) {
+  const { t } = useTranslation();
+
   return (
     <View className="gap-3">
-      <Text className="text-xl font-semibold text-ink">Agenda de hoy</Text>
+      <Text className="text-xl font-semibold text-ink dark:text-dark-ink">{t('dashboard.todayAgenda')}</Text>
       <Card className="gap-3">
         {items.map((item) => (
           <View
             key={item.id}
-            className="rounded-3xl border border-border bg-surfaceSoft px-4 py-4">
+            className="rounded-3xl border border-border dark:border-dark-border bg-surface-soft dark:bg-dark-surface-soft px-4 py-4">
             <View className="flex-row items-center justify-between gap-3">
               <View className="flex-1">
-                <Text className="text-base font-semibold text-ink">{item.title}</Text>
-                <Text className="mt-1 text-sm text-muted">{item.meta}</Text>
+                <Text className="text-base font-semibold text-ink dark:text-dark-ink">{item.title}</Text>
+                <Text className="mt-1 text-sm text-muted dark:text-dark-muted">{item.meta}</Text>
               </View>
               <View className="flex-row items-center gap-2">
                 {item.type === 'task' && (

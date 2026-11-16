@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { Card } from '@/core/components/Card';
@@ -9,20 +10,24 @@ type Props = {
 };
 
 export function AchievementsCard({ achievements }: Props) {
+  const { t } = useTranslation();
+
   if (achievements.length === 0) {
     return null;
   }
 
   return (
     <Card className="gap-4">
-      <Text className="text-lg font-semibold text-ink">Logros</Text>
+      <Text className="text-lg font-semibold text-ink dark:text-dark-ink">
+        {t('insights.achievementsTitle')}
+      </Text>
 
       <View className="flex-row flex-wrap gap-3">
         {achievements.map((achievement) => (
           <View
             key={achievement.id}
             className={`flex-1 min-w-[45%] rounded-2xl border p-4 ${
-              achievement.unlocked ? 'border-amber-400 bg-amber-50' : 'border-border bg-slate-50'
+              achievement.unlocked ? 'border-amber-400 bg-amber-50' : 'border-border bg-slate-50 dark:bg-dark-surface-soft'
             }`}>
             <View className="flex-row items-center gap-2">
               <Ionicons
@@ -32,7 +37,7 @@ export function AchievementsCard({ achievements }: Props) {
               />
               <Text
                 className={`flex-1 text-sm font-semibold ${
-                  achievement.unlocked ? 'text-amber-900' : 'text-slate-500'
+                  achievement.unlocked ? 'text-amber-900' : 'text-slate-500 dark:text-slate-400'
                 }`}
                 numberOfLines={1}
                 ellipsizeMode="tail">

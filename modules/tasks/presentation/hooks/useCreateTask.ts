@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { CreateTaskUseCase, GetTasksUseCase } from '@/modules/tasks/domain/useCases';
 import { createTasksRepository } from '@/modules/tasks/data/repositories';
@@ -10,6 +11,7 @@ type State = {
 };
 
 export function useCreateTask() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const tasksRepository = createTasksRepository();
   const createTaskUseCase = new CreateTaskUseCase(tasksRepository);
@@ -23,11 +25,11 @@ export function useCreateTask() {
       setState({ isLoading: false, error: null });
       return task;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error creating task';
+      const message = error instanceof Error ? error.message : t('tasks.errorCreating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [createTaskUseCase]);
+  }, [createTaskUseCase, t]);
 
   const getTasks = useCallback(async () => {
     return getTasksUseCase.execute();

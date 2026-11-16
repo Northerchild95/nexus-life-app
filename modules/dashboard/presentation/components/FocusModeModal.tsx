@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import type { FocusSession } from '../../domain/entities/FocusSession';
@@ -27,6 +28,8 @@ export function FocusModeModal({
   audioPlayer,
   pauseAudioPlayer,
 }: Props) {
+  const { t } = useTranslation();
+
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -49,7 +52,7 @@ export function FocusModeModal({
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: '#0f172a' }}>
       {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24 }}>
-        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#ffffff' }}>Modo Focus</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#ffffff' }}>{t('dashboard.focus.title')}</Text>
         <TouchableOpacity 
           onPress={onClose} 
           activeOpacity={0.7}
@@ -71,7 +74,7 @@ export function FocusModeModal({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#60a5fa' }}>
-                    Focus actual
+                    {t('dashboard.focus.current')}
                   </Text>
                   <Text style={{ marginTop: 4, fontSize: 18, fontWeight: 'bold', color: '#ffffff' }}>{session.focusTitle}</Text>
                 </View>
@@ -81,9 +84,11 @@ export function FocusModeModal({
             {/* Timer */}
             <View style={{ gap: 20, borderRadius: 24, backgroundColor: '#1e293b', padding: 20 }}>
               <View style={{ alignItems: 'center', gap: 12 }}>
-                <Text style={{ fontSize: 14, fontWeight: '500', color: '#94a3b8' }}>Tiempo transcurrido</Text>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: '#94a3b8' }}>{t('dashboard.focus.elapsed')}</Text>
                 <Text style={{ fontSize: 56, fontWeight: 'bold', color: '#ffffff' }}>{formatTime(elapsedTime)}</Text>
-                <Text style={{ fontSize: 14, color: '#94a3b8' }}>de {formatTime(session.duration)}</Text>
+                <Text style={{ fontSize: 14, color: '#94a3b8' }}>
+                  {t('dashboard.focus.of', { time: formatTime(session.duration) })}
+                </Text>
               </View>
 
               {/* Progress Bar */}
@@ -96,11 +101,11 @@ export function FocusModeModal({
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <View style={{ alignItems: 'center' }}>
                   <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>{formatTime(remainingTime)}</Text>
-                  <Text style={{ fontSize: 14, color: '#94a3b8' }}>Restante</Text>
+                  <Text style={{ fontSize: 14, color: '#94a3b8' }}>{t('dashboard.focus.remaining')}</Text>
                 </View>
                 <View style={{ alignItems: 'center' }}>
                   <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>{session.interruptionsCount}</Text>
-                  <Text style={{ fontSize: 14, color: '#94a3b8' }}>Interrupciones</Text>
+                  <Text style={{ fontSize: 14, color: '#94a3b8' }}>{t('dashboard.focus.interruptions')}</Text>
                 </View>
               </View>
             </View>
@@ -117,7 +122,7 @@ export function FocusModeModal({
                   }}
                 />
                 <Text style={{ fontSize: 16, fontWeight: '500', color: '#ffffff' }}>
-                  {isActive ? 'Sesión activa' : 'Sesión pausada'}
+                  {isActive ? t('dashboard.focus.active') : t('dashboard.focus.paused')}
                 </Text>
               </View>
             </View>
@@ -132,7 +137,7 @@ export function FocusModeModal({
                     onPause();
                   }}
                   style={{ minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#0f172a' }}>Pausar sesión</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#0f172a' }}>{t('dashboard.focus.pause')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -142,7 +147,7 @@ export function FocusModeModal({
                     onResume();
                   }}
                   style={{ minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#2563eb' }}>
-                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>Reanudar sesión</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>{t('dashboard.focus.resume')}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -152,7 +157,7 @@ export function FocusModeModal({
                   onComplete();
                 }}
                 style={{ minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#22c55e' }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>Completar sesión</Text>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>{t('dashboard.focus.complete')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -161,9 +166,9 @@ export function FocusModeModal({
             <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center', borderRadius: 40, backgroundColor: '#1e293b' }}>
               <Text style={{ fontSize: 40 }}>⚡</Text>
             </View>
-            <Text style={{ marginTop: 16, fontSize: 20, fontWeight: 'bold', color: '#ffffff' }}>No hay sesión activa</Text>
+            <Text style={{ marginTop: 16, fontSize: 20, fontWeight: 'bold', color: '#ffffff' }}>{t('dashboard.focus.emptyTitle')}</Text>
             <Text style={{ marginTop: 8, textAlign: 'center', fontSize: 16, color: '#94a3b8' }}>
-              Inicia una sesión de focus desde el dashboard
+              {t('dashboard.focus.emptyMessage')}
             </Text>
           </View>
         )}

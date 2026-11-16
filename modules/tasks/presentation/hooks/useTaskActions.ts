@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { UpdateTaskUseCase, DeleteTaskUseCase } from '@/modules/tasks/domain/useCases';
 import { createTasksRepository } from '@/modules/tasks/data/repositories';
@@ -10,6 +11,7 @@ type State = {
 };
 
 export function useTaskActions() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: false, error: null });
   const tasksRepository = createTasksRepository();
   const updateTaskUseCase = new UpdateTaskUseCase(tasksRepository);
@@ -23,11 +25,11 @@ export function useTaskActions() {
       setState({ isLoading: false, error: null });
       return task;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error updating task';
+      const message = error instanceof Error ? error.message : t('tasks.errorUpdating');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [updateTaskUseCase]);
+  }, [updateTaskUseCase, t]);
 
   const deleteTask = useCallback(async (id: string) => {
     setState({ isLoading: true, error: null });
@@ -36,11 +38,11 @@ export function useTaskActions() {
       await deleteTaskUseCase.execute(id);
       setState({ isLoading: false, error: null });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error deleting task';
+      const message = error instanceof Error ? error.message : t('tasks.errorDeleting');
       setState({ isLoading: false, error: message });
       throw error;
     }
-  }, [deleteTaskUseCase]);
+  }, [deleteTaskUseCase, t]);
 
   const completeTask = useCallback(async (id: string) => {
     return updateTask(id, { status: 'completed' });

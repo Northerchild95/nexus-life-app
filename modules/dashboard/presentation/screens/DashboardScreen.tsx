@@ -18,9 +18,11 @@ import { CreateTaskModal, EditTaskModal } from '@/modules/tasks/presentation/com
 import { useTaskActions } from '@/modules/tasks/presentation/hooks/useTaskActions';
 import { useAudioPlayer } from 'expo-audio';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 export function DashboardScreen() {
+  const { t } = useTranslation();
   const [isCreateTaskModalVisible, setIsCreateTaskModalVisible] = useState(false);
   const [isEditTaskModalVisible, setIsEditTaskModalVisible] = useState(false);
   const [taskToEditId, setTaskToEditId] = useState<string | null>(null);
@@ -235,9 +237,9 @@ export function DashboardScreen() {
     return (
       <ScreenContainer contentClassName="items-center justify-center gap-3">
         <View className="h-12 w-12 rounded-3xl bg-brand-100" />
-        <Text className="text-base font-semibold text-ink">Cargando tu dashboard...</Text>
-        <Text className="max-w-[80%] text-center text-sm leading-6 text-muted">
-          Estamos preparando tu foco, agenda e insights del dia.
+        <Text className="text-base font-semibold text-ink dark:text-dark-ink">{t('common.loading')}</Text>
+        <Text className="max-w-[80%] text-center text-sm leading-6 text-muted dark:text-dark-muted">
+          {t('dashboard.noTasks')}
         </Text>
       </ScreenContainer>
     );
@@ -247,12 +249,12 @@ export function DashboardScreen() {
     return (
       <ScreenContainer contentClassName="items-center justify-center gap-3">
         <View className="h-12 w-12 rounded-3xl bg-red-100" />
-        <Text className="text-base font-semibold text-ink">No pudimos cargar el dashboard</Text>
-        <Text className="max-w-[80%] text-center text-sm leading-6 text-muted">
-          {error ?? 'Intentalo de nuevo en unos segundos.'}
+        <Text className="text-base font-semibold text-ink dark:text-dark-ink">{t('common.error')}</Text>
+        <Text className="max-w-[80%] text-center text-sm leading-6 text-muted dark:text-dark-muted">
+          {error ?? t('common.retry')}
         </Text>
-        <Text className="text-sm font-semibold text-brand-700" onPress={refresh}>
-          Reintentar
+        <Text className="text-sm font-semibold text-brand-700 dark:text-white" onPress={refresh}>
+          {t('common.retry')}
         </Text>
       </ScreenContainer>
     );
@@ -288,10 +290,10 @@ export function DashboardScreen() {
         />
         <ConfirmDialog
           visible={isDeleteDialogVisible}
-          title="Eliminar tarea"
-          message="¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer."
-          confirmText="Eliminar"
-          cancelText="Cancelar"
+          title={t('tasks.deleteTitle')}
+          message={t('tasks.deleteMessage')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           onConfirm={confirmDeleteTask}
           onCancel={cancelDeleteTask}
           destructive
@@ -315,10 +317,10 @@ export function DashboardScreen() {
         />
         <ConfirmDialog
           visible={isDeleteHabitDialogVisible}
-          title="Eliminar hábito"
-          message="¿Estás seguro de que quieres eliminar este hábito? Esta acción no se puede deshacer."
-          confirmText="Eliminar"
-          cancelText="Cancelar"
+          title={t('habits.deleteTitle')}
+          message={t('habits.deleteMessage')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           onConfirm={confirmDeleteHabit}
           onCancel={cancelDeleteHabit}
           destructive
@@ -336,10 +338,10 @@ export function DashboardScreen() {
         />
         <ConfirmDialog
           visible={isDeleteExpenseDialogVisible}
-          title="Eliminar gasto"
-          message="¿Estás seguro de que quieres eliminar este gasto? Esta acción no se puede deshacer."
-          confirmText="Eliminar"
-          cancelText="Cancelar"
+          title={t('finance.deleteTitle')}
+          message={t('finance.deleteMessage')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           onConfirm={confirmDeleteExpense}
           onCancel={cancelDeleteExpense}
           destructive
@@ -359,8 +361,8 @@ export function DashboardScreen() {
       />
       <FocusAlert
         visible={showCompletionAlert}
-        title="¡Sesión completada!"
-        message="Has completado tu sesión de focus exitosamente."
+        title={t('dashboard.focus.completedTitle')}
+        message={t('dashboard.focus.completedMessage')}
         onConfirm={closeCompletionAlert}
       />
       {playSound && (

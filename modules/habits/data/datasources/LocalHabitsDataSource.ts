@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import i18n from '@/core/i18n/i18n';
 import type { Habit } from '@/modules/habits/domain/entities';
 import type { CreateHabitParams, UpdateHabitParams } from '@/modules/habits/domain/repositories';
 
@@ -71,7 +72,7 @@ export class LocalHabitsDataSource {
   async update(id: string, params: UpdateHabitParams): Promise<Habit> {
     const habits = await this.getAll();
     const index = habits.findIndex((h) => h.id === id);
-    if (index === -1) throw new Error('Habit not found');
+    if (index === -1) throw new Error(i18n.t('habits.errorNotFound'));
     
     habits[index] = {
       ...habits[index],

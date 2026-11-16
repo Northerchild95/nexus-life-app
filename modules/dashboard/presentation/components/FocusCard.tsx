@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { Button } from '@/core/components/Button';
@@ -11,8 +12,10 @@ type Props = {
 };
 
 export function FocusCard({ focus, onPress }: Props) {
+  const { t } = useTranslation();
+
   return (
-    <Card variant="elevated" className="overflow-hidden bg-ink p-0">
+    <Card variant="ink" className="overflow-hidden p-0">
       <View className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-brand-500/25" />
       <View className="absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-emerald-400/10" />
 
@@ -24,15 +27,15 @@ export function FocusCard({ focus, onPress }: Props) {
                 <Ionicons name="flash" color="#ffffff" size={20} />
               </View>
               <View>
-                <Text className="text-xs font-semibold uppercase tracking-[1.6px] text-blue-600">
-                  Focus of the day
+                <Text className="text-xs font-semibold uppercase tracking-[1.6px] text-brand-200">
+                  {t('dashboard.focusOfTheDay')}
                 </Text>
-                <Text className="mt-1 text-sm text-slate-600">{focus.durationLabel}</Text>
+                <Text className="mt-1 text-sm text-slate-300">{focus.durationLabel}</Text>
               </View>
             </View>
 
-            <Text className="mt-5 text-3xl font-bold leading-9 text-muted">{focus.title}</Text>
-            <Text className="mt-3 text-base leading-7 text-slate-600">{focus.description}</Text>
+            <Text className="mt-5 text-3xl font-bold leading-9 text-white">{focus.title}</Text>
+            <Text className="mt-3 text-base leading-7 text-slate-300">{focus.description}</Text>
           </View>
         </View>
 
@@ -42,15 +45,15 @@ export function FocusCard({ focus, onPress }: Props) {
               <Ionicons name="leaf" color="#bbf7d0" size={18} />
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-semibold text-muted">{focus.ritualTitle}</Text>
-              <Text className="mt-1 text-sm leading-6 text-slate-600">
+              <Text className="text-sm font-semibold text-white">{focus.ritualTitle}</Text>
+              <Text className="mt-1 text-sm leading-6 text-slate-300">
                 {focus.ritualDescription}
               </Text>
             </View>
           </View>
         </View>
 
-        <Button label="Empezar ahora" onPress={onPress} variant="secondary" />
+        <Button label={t('dashboard.startNow')} onPress={onPress} variant="secondary" />
       </View>
     </Card>
   );

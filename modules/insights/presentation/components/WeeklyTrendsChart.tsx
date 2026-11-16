@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Dimensions, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 import { Card } from '@/core/components/Card';
+import { useIsDarkMode } from '@/core/theme/useThemeSync';
 import type { WeeklyTrend } from '../../domain/entities';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -11,21 +13,28 @@ type Props = {
 };
 
 export function WeeklyTrendsChart({ trends }: Props) {
+  const { t } = useTranslation();
+  const isDark = useIsDarkMode();
+
   if (trends.length === 0) {
     return null;
   }
 
-  const labels = trends.map((t) => `Sem ${t.weekNumber}`);
-  const tasksData = trends.map((t) => t.tasksCompleted);
-  const habitsData = trends.map((t) => t.habitsCompleted);
-  const spendingData = trends.map((t) => t.totalSpent);
+  const labels = trends.map((trend) => t('insights.weekLabel', { number: trend.weekNumber }));
+  const tasksData = trends.map((trend) => trend.tasksCompleted);
+  const habitsData = trends.map((trend) => trend.habitsCompleted);
+  const spendingData = trends.map((trend) => trend.totalSpent);
 
   return (
     <Card className="gap-4">
-      <Text className="text-lg font-semibold text-ink">Tendencias Semanales</Text>
+      <Text className="text-lg font-semibold text-ink dark:text-dark-ink">
+        {t('insights.weeklyTrendsTitle')}
+      </Text>
 
       <View>
-        <Text className="mb-2 text-sm font-medium text-slate-700">Tareas y Hábitos</Text>
+        <Text className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          {t('insights.tasksAndHabits')}
+        </Text>
         <LineChart
           data={{
             labels,
@@ -47,8 +56,10 @@ export function WeeklyTrendsChart({ trends }: Props) {
           chartConfig={{
             backgroundColor: 'transparent',
             decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            color: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
             style: {
               borderRadius: 16,
             },
@@ -61,7 +72,9 @@ export function WeeklyTrendsChart({ trends }: Props) {
       </View>
 
       <View>
-        <Text className="mb-2 text-sm font-medium text-slate-700">Gastos</Text>
+        <Text className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          {t('insights.spending')}
+        </Text>
         <LineChart
           data={{
             labels,
@@ -78,8 +91,10 @@ export function WeeklyTrendsChart({ trends }: Props) {
           chartConfig={{
             backgroundColor: 'transparent',
             decimalPlaces: 2,
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            color: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+            labelColor: (opacity = 1) =>
+              isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
             style: {
               borderRadius: 16,
             },

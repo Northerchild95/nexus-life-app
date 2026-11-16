@@ -1,5 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { createExpenseRepository } from '@/modules/finance/data/repositories';
 import type { Expense } from '@/modules/finance/domain/entities';
@@ -12,6 +13,7 @@ type State = {
 };
 
 export function useExpenses() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State>({ isLoading: true, error: null, expenses: [] });
 
   const getExpensesUseCase = useMemo(() => {
@@ -25,10 +27,10 @@ export function useExpenses() {
       const expenses = await getExpensesUseCase.execute();
       setState({ isLoading: false, error: null, expenses });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error loading expenses';
+      const message = error instanceof Error ? error.message : t('finance.errorLoading');
       setState({ isLoading: false, error: message, expenses: [] });
     }
-  }, [getExpensesUseCase]);
+  }, [getExpensesUseCase, t]);
 
   useEffect(() => {
     void loadExpenses();

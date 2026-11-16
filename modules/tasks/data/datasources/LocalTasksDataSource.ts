@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import i18n from '@/core/i18n/i18n';
 import type { Task } from '../../domain/entities';
 import type { CreateTaskParams, UpdateTaskParams } from '../../domain/repositories';
 
@@ -54,7 +55,7 @@ export class LocalTasksDataSource {
     const taskIndex = tasks.findIndex((task) => task.id === id);
     
     if (taskIndex === -1) {
-      throw new Error(`Task with id ${id} not found`);
+      throw new Error(i18n.t('tasks.errorNotFound'));
     }
     
     const updatedTask: Task = {
