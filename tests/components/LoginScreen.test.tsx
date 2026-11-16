@@ -13,7 +13,7 @@ describe('LoginScreen', () => {
     useAppStore.setState({
       session: { user: null, token: null, isAuthenticated: false },
       loading: { auth: false },
-      ui: { theme: 'light' },
+      ui: { theme: 'light', language: 'en' },
     });
   });
 

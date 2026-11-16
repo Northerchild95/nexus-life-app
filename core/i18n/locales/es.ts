@@ -190,8 +190,13 @@ export const es = {
     empty: 'Aún no hay tareas. ¡Crea tu primera tarea!',
     completed: 'Completada',
     pending: 'Pendiente',
+    inProgress: 'En progreso',
+    pendingCaption: 'Aún en progreso',
     highPriority: 'Alta Prioridad',
     dueSoon: 'Vence Pronto',
+    noDueDate: 'Sin fecha límite',
+    today: 'Hoy',
+    tomorrow: 'Mañana',
     noHighPriority: 'No hay tareas de alta prioridad',
     noDueSoon: 'No hay tareas que vencen pronto',
     deleteTitle: 'Eliminar Tarea',
@@ -202,7 +207,11 @@ export const es = {
     dueSoonCount: '{{count}} vence pronto',
     workloadHealthy:
       'Tu carga de trabajo está saludable, pero una tarea debería adelantarse antes de volverse urgente.',
+    workloadDueSoon:
+      'Tienes {{count}} tarea(s) que conviene adelantar antes de que se vuelvan urgentes.',
+    workloadClear: 'Tu carga de trabajo está saludable. ¡Sigue así!',
     upNext: 'A continuación',
+    noUpNext: '¡Estás al día!',
     completedStat: 'Completadas',
     completedCaption: 'Entre trabajo y vida personal',
     delegated: 'Delegadas',
@@ -442,6 +451,72 @@ export const es = {
       focusValue: 'Un solo lugar',
       rhythmLabel: 'Ritmo',
       rhythmValue: 'Cada día',
+    },
+  },
+  assistant: {
+    title: 'Asistente Nexus',
+    subtitle: 'Tu copiloto personal para tareas, hábitos y gastos',
+    open: 'Abrir asistente',
+    previewModeBadge: 'Vista previa UI',
+    close: 'Cerrar',
+    clearChat: 'Limpiar chat',
+    clearTitle: 'Limpiar conversación',
+    clearMessage: 'Esto limpiará los mensajes de prueba actuales en memoria.',
+    clearConfirm: 'Limpiar',
+    thinking: 'Pensando...',
+    inputPlaceholder: 'Pídeme anotar un gasto o crear una tarea...',
+    send: 'Enviar',
+    welcomeTitle: '¿En qué te ayudo hoy?',
+    welcomeSubtitle:
+      'Prueba una sugerencia rápida o escribe una petición para previsualizar las tarjetas de acción.',
+    quickSuggestionsLabel: 'Sugerencias rápidas',
+    youLabel: 'Tú',
+    assistantLabel: 'Nexus IA',
+    mockSourceBadge: 'Mockup',
+    prompts: {
+      logExpense: 'Gasté $180 en comida',
+      createTask: 'Recuérdame pagar el internet mañana',
+      createHabit: 'Nuevo hábito: leer 20 min diarios',
+      weeklySummary: '¿Cómo voy esta semana?',
+    },
+    actionPreview: {
+      expenseBadge: 'Vista previa de gasto',
+      taskBadge: 'Vista previa de tarea',
+      amountLabel: 'Monto',
+      categoryLabel: 'Categoría',
+      dateLabel: 'Fecha',
+      priorityLabel: 'Prioridad',
+      dueDateLabel: 'Fecha límite',
+      confirm: 'Confirmar',
+      cancel: 'Cancelar',
+      confirmedStatus: 'Confirmado (solo vista previa)',
+      cancelledStatus: 'Cancelado',
+      today: 'Hoy',
+      tomorrow: 'Mañana',
+    },
+    mock: {
+      greeting:
+        '¡Hola! Esta es la vista previa visual del Asistente Nexus. Toca una sugerencia rápida o escribe un mensaje para probar las tarjetas de acción.',
+      userExpenseSample: 'Gasté $24.50 en almuerzo con el equipo hoy',
+      assistantExpenseSample:
+        'Preparé este borrador de gasto para ti. Revisa los datos y confirma cuando quieras:',
+      sampleExpenseTitle: 'Almuerzo con el equipo',
+      userTaskSample: 'Agrega una tarea urgente para entregar el reporte mensual mañana',
+      assistantTaskSample:
+        'Listo. Aquí tienes la vista previa de la tarea para confirmar:',
+      sampleTaskTitle: 'Entregar reporte mensual',
+      replyExpense:
+        'Generé esta vista previa de gasto en memoria. Puedes confirmarla o cancelarla abajo:',
+      replyTask:
+        'Generé esta vista previa de tarea en memoria. Revisa los detalles abajo:',
+      replyHabit:
+        'La creación de hábitos llegará en la siguiente fase. Por ahora, prueba un gasto o una tarea para ver las tarjetas de confirmación.',
+      replySummary:
+        'Modo vista previa activo: en la Fase 2 aquí consultaremos tus tareas, hábitos y gastos reales guardados localmente.',
+      replyGeneric:
+        'Vista previa recibió "{{text}}". Prueba mencionar un gasto (ej. "$15 café") o una tarea para ver una tarjeta de acción.',
+      defaultExpenseTitle: 'Gasto rápido',
+      defaultTaskTitle: 'Dar seguimiento a solicitud',
     },
   },
 };

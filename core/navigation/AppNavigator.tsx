@@ -1,10 +1,15 @@
 import { DarkTheme, DefaultTheme, NavigationContainer, type Theme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AuthNavigator } from '@/core/navigation/AuthNavigator';
 import { MainTabsNavigator } from '@/core/navigation/MainTabsNavigator';
+import type { RootStackParamList } from '@/core/navigation/types';
 import { useAppStore } from '@/core/store/appStore';
 import { useResolvedColorScheme } from '@/core/theme/useThemeSync';
+import { AssistantScreen } from '@/modules/assistant/presentation/screens/AssistantScreen';
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 const lightNavigationTheme: Theme = {
   ...DefaultTheme,
@@ -47,7 +52,18 @@ export function AppNavigator() {
 
   return (
     <NavigationContainer theme={isDark ? darkNavigationTheme : lightNavigationTheme}>
-      {isAuthenticated ? <MainTabsNavigator /> : <AuthNavigator />}
+      {isAuthenticated ? (
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          <RootStack.Screen name="MainTabs" component={MainTabsNavigator} />
+          <RootStack.Screen
+            name="Assistant"
+            component={AssistantScreen}
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+        </RootStack.Navigator>
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 }
