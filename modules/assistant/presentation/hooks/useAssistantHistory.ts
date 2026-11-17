@@ -87,6 +87,17 @@ export function useAssistantHistory() {
     [commit],
   );
 
+  const updateMessage = useCallback(
+    (messageId: string, patch: Partial<AssistantMessage>) => {
+      commit(
+        messagesRef.current.map((message) =>
+          message.id === messageId ? { ...message, ...patch } : message,
+        ),
+      );
+    },
+    [commit],
+  );
+
   const clearHistory = useCallback(() => {
     messagesRef.current = [];
     setMessages([]);
@@ -100,6 +111,7 @@ export function useAssistantHistory() {
     error,
     appendMessage,
     updateActionStatus,
+    updateMessage,
     clearHistory,
   };
 }

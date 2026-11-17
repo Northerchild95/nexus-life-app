@@ -479,16 +479,22 @@ export const es = {
       weeklySummary: '¿Cómo voy esta semana?',
     },
     replies: {
+      greeting: '¡Hola! Dime qué necesitas y preparo un borrador para ti.',
       expense: 'Entendido. Revisa el borrador del gasto y confirma para guardarlo:',
       task: 'Entendido. Revisa el borrador de la tarea y confirma para guardarla:',
       habit:
         'La creación de hábitos llegará en una próxima fase. Por ahora puedo guardar gastos y tareas.',
       summary:
         'Todavía no puedo generar resúmenes. Por ahora puedo registrar gastos y crear tareas.',
+      summaryWithData:
+        'Esta semana: {{pending}} tareas pendientes ({{high}} de alta prioridad) y {{completed}} completadas. Gastos: {{expenses}} por ${{spent}}. Hábitos hoy: {{habitsDone}}/{{habits}}.',
+      summaryTopCategory: 'Tu categoría de gasto principal fue {{top}}.',
       generic:
         'No pude detectar una acción en "{{text}}". Prueba con "Gasté $15 en café" o "Recuérdame pagar el internet mañana".',
       defaultExpenseTitle: 'Gasto rápido',
       defaultTaskTitle: 'Nueva tarea',
+      localFallback: 'La IA no estuvo disponible, así que usé el detector local.',
+      multipleDetected: 'Detecté {{count}} acciones separadas. ¿Cómo las preparo?',
     },
     errors: {
       invalidAmount: 'No pude detectar un monto válido para el gasto.',
@@ -497,6 +503,14 @@ export const es = {
       saveTask: 'No se pudo guardar la tarea. Inténtalo de nuevo.',
       saveHistory: 'No se pudo guardar el historial del chat.',
       loadHistory: 'No se pudo cargar el historial del chat.',
+      detectIntent: 'No pude entender ese mensaje. Inténtalo de nuevo.',
+    },
+    choice: {
+      badge: '{{count}} acciones detectadas',
+      question: '¿Las creo individuales o en una sola tarea?',
+      individual: 'Individuales',
+      unified: 'Una sola',
+      untitled: '(sin título)',
     },
     actionPreview: {
       expenseBadge: 'Gasto listo para guardar',

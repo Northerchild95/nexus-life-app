@@ -27,11 +27,13 @@ import type {
   AssistantIntent,
   AssistantMessage,
 } from '@/modules/assistant/domain/entities';
-import { parseAssistantIntent } from '@/modules/assistant/domain/parsers';
-
+import { canMergeIntents, isGreeting, mergeIntents } from '@/modules/assistant/domain/parsers';
 import { ActionPreviewCard } from '../components/ActionPreviewCard';
+import { MultiIntentChoiceCard } from '../components/MultiIntentChoiceCard';
 import { useAssistantActions } from '../hooks/useAssistantActions';
 import { useAssistantHistory } from '../hooks/useAssistantHistory';
+import { useAssistantIntent } from '../hooks/useAssistantIntent';
+import { useWeeklySummary } from '../hooks/useWeeklySummary';
 
 const QUICK_PROMPTS = [
   { key: 'logExpense', icon: 'card-outline', promptKey: 'assistant.prompts.logExpense' },
@@ -47,9 +49,17 @@ type MessageBubbleProps = {
   message: AssistantMessage;
   onConfirmAction: (message: AssistantMessage) => Promise<void>;
   onCancelAction: (message: AssistantMessage) => void;
+  onChooseIndividual: (message: AssistantMessage) => void;
+  onChooseUnified: (message: AssistantMessage) => void;
 };
 
-function MessageBubble({ message, onConfirmAction, onCancelAction }: MessageBubbleProps) {
+function MessageBubble({
+  message,
+  onConfirmAction,
+  onCancelAction,
+  onChooseIndividual,
+  onChooseUnified,
+}: MessageBubbleProps) {
   const { t } = useTranslation();
   const isUser = message.role === 'user';
 
@@ -73,6 +83,15 @@ function MessageBubble({ message, onConfirmAction, onCancelAction }: MessageBubb
           {message.text}
         </Text>
       </View>
+      {message.pendingIntents?.length ? (
+        <View className="w-full max-w-[94%]">
+          <MultiIntentChoiceCard
+            intents={message.pendingIntents}
+            onIndividual={() => onChooseIndividual(message)}
+            onUnified={() => onChooseUnified(message)}
+          />
+        </View>
+      ) : null}
       {message.intent ? (
         <View className="w-full max-w-[94%]">
           <ActionPreviewCard
@@ -98,9 +117,12 @@ export function AssistantScreen() {
     isLoading: isHistoryLoading,
     appendMessage,
     updateActionStatus,
+    updateMessage,
     clearHistory,
   } = useAssistantHistory();
   const { executeIntent } = useAssistantActions();
+  const { detectIntent } = useAssistantIntent();
+  const { buildSummary } = useWeeklySummary();
 
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -108,7 +130,7 @@ export function AssistantScreen() {
   const [isClearDialogVisible, setIsClearDialogVisible] = useState(false);
 
   const listRef = useRef<FlatList<AssistantMessage>>(null);
-  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const thinkingRef = useRef(false);
   const messageCounter = useRef(0);
 
   const createMessage = (
@@ -116,6 +138,7 @@ export function AssistantScreen() {
     text: string,
     intent?: AssistantIntent,
     actionStatus?: AssistantActionStatus,
+    pendingIntents?: AssistantIntent[],
   ): AssistantMessage => {
     messageCounter.current += 1;
 
@@ -125,6 +148,7 @@ export function AssistantScreen() {
       text,
       createdAt: new Date().toISOString(),
       ...(intent ? { intent, actionStatus: actionStatus ?? 'pending' } : {}),
+      ...(pendingIntents?.length ? { pendingIntents } : {}),
     };
   };
 
@@ -142,44 +166,81 @@ export function AssistantScreen() {
     };
   };
 
-  const buildAssistantReply = (text: string): AssistantMessage => {
-    const parsedIntent = parseAssistantIntent(text);
+  const buildAssistantReply = async (text: string): Promise<AssistantMessage[]> => {
+    const { intents, reply, usedFallback } = await detectIntent(text);
 
-    if (parsedIntent) {
-      const intent = withFallbackTitle(parsedIntent);
+    if (intents.length > 0) {
+      const note = usedFallback ? ` ${t('assistant.replies.localFallback')}` : '';
 
-      return createMessage(
-        'assistant',
-        t(intent.kind === 'expense' ? 'assistant.replies.expense' : 'assistant.replies.task'),
-        intent,
-      );
+      // Same kind: let the user choose several drafts or one merged draft.
+      if (intents.length > 1 && canMergeIntents(intents)) {
+        return [
+          createMessage(
+            'assistant',
+            `${t('assistant.replies.multipleDetected', { count: intents.length })}${note}`,
+            undefined,
+            undefined,
+            intents,
+          ),
+        ];
+      }
+
+      return intents.map((detectedIntent) => {
+        const intent = withFallbackTitle(detectedIntent);
+        const baseText = t(
+          intent.kind === 'expense' ? 'assistant.replies.expense' : 'assistant.replies.task',
+        );
+
+        return createMessage('assistant', `${baseText}${note}`, intent);
+      });
     }
 
+    // Weekly stats come from real data, so answers are factual even offline.
     if (SUMMARY_INTENT.test(text)) {
-      return createMessage('assistant', t('assistant.replies.summary'));
+      return [createMessage('assistant', await buildSummary())];
+    }
+
+    // The AI can answer greetings and questions without creating anything.
+    if (reply?.trim()) {
+      return [createMessage('assistant', reply.trim())];
+    }
+
+    const note = usedFallback ? ` ${t('assistant.replies.localFallback')}` : '';
+
+    if (isGreeting(text)) {
+      return [createMessage('assistant', `${t('assistant.replies.greeting')}${note}`)];
     }
 
     if (HABIT_INTENT.test(text)) {
-      return createMessage('assistant', t('assistant.replies.habit'));
+      return [createMessage('assistant', `${t('assistant.replies.habit')}${note}`)];
     }
 
-    return createMessage('assistant', t('assistant.replies.generic', { text }));
+    return [createMessage('assistant', `${t('assistant.replies.generic', { text })}${note}`)];
   };
 
-  const sendMessage = (value?: string) => {
+  const sendMessage = async (value?: string) => {
     const text = (value ?? input).trim();
-    if (!text || isThinking || isHistoryLoading) return;
+    if (!text || thinkingRef.current || isHistoryLoading) return;
 
+    thinkingRef.current = true;
     setInput('');
     appendMessage(createMessage('user', text));
     setIsThinking(true);
 
-    if (replyTimer.current) clearTimeout(replyTimer.current);
-    replyTimer.current = setTimeout(() => {
-      appendMessage(buildAssistantReply(text));
+    try {
+      const replies = await buildAssistantReply(text);
+      replies.forEach((reply) => appendMessage(reply));
+    } catch (error) {
+      appendMessage(
+        createMessage(
+          'assistant',
+          error instanceof Error ? error.message : t('assistant.errors.detectIntent'),
+        ),
+      );
+    } finally {
+      thinkingRef.current = false;
       setIsThinking(false);
-      replyTimer.current = null;
-    }, 450);
+    }
   };
 
   const handleConfirmAction = async (message: AssistantMessage) => {
@@ -193,12 +254,39 @@ export function AssistantScreen() {
     updateActionStatus(message.id, 'cancelled');
   };
 
-  const handleClearConversation = () => {
-    if (replyTimer.current) {
-      clearTimeout(replyTimer.current);
-      replyTimer.current = null;
-    }
+  const handleChooseIndividual = (message: AssistantMessage) => {
+    const intents = message.pendingIntents ?? [];
+    updateMessage(message.id, { pendingIntents: undefined, actionStatus: 'cancelled' });
 
+    intents.forEach((detectedIntent) => {
+      const intent = withFallbackTitle(detectedIntent);
+      appendMessage(
+        createMessage(
+          'assistant',
+          t(intent.kind === 'expense' ? 'assistant.replies.expense' : 'assistant.replies.task'),
+          intent,
+        ),
+      );
+    });
+  };
+
+  const handleChooseUnified = (message: AssistantMessage) => {
+    const intents = message.pendingIntents ?? [];
+    if (!intents.length) return;
+
+    const intent = withFallbackTitle(mergeIntents(intents));
+    updateMessage(message.id, { pendingIntents: undefined, actionStatus: 'cancelled' });
+    appendMessage(
+      createMessage(
+        'assistant',
+        t(intent.kind === 'expense' ? 'assistant.replies.expense' : 'assistant.replies.task'),
+        intent,
+      ),
+    );
+  };
+
+  const handleClearConversation = () => {
+    thinkingRef.current = false;
     setIsThinking(false);
     clearHistory();
     setIsClearDialogVisible(false);
@@ -222,18 +310,13 @@ export function AssistantScreen() {
     };
   }, []);
 
-  useEffect(
-    () => () => {
-      if (replyTimer.current) clearTimeout(replyTimer.current);
-    },
-    [],
-  );
-
   const renderMessage = ({ item }: { item: AssistantMessage }) => (
     <MessageBubble
       message={item}
       onConfirmAction={handleConfirmAction}
       onCancelAction={handleCancelAction}
+      onChooseIndividual={handleChooseIndividual}
+      onChooseUnified={handleChooseUnified}
     />
   );
 

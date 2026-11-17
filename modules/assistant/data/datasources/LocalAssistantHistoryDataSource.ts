@@ -44,6 +44,8 @@ const isMessage = (value: unknown): value is AssistantMessage =>
   typeof value.text === 'string' &&
   typeof value.createdAt === 'string' &&
   (value.intent === undefined || isIntent(value.intent)) &&
+  (value.pendingIntents === undefined ||
+    (Array.isArray(value.pendingIntents) && value.pendingIntents.every(isIntent))) &&
   (value.actionStatus === undefined || isActionStatus(value.actionStatus));
 
 export class LocalAssistantHistoryDataSource {

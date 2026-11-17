@@ -10,5 +10,7 @@ export type AssistantMessage = {
   text: string;
   createdAt: string;
   intent?: AssistantIntent;
+  /** Several detected items awaiting the user's "individual vs unified" choice. */
+  pendingIntents?: AssistantIntent[];
   actionStatus?: AssistantActionStatus;
 };

@@ -473,14 +473,20 @@ export const en = {
       weeklySummary: 'How am I doing this week?',
     },
     replies: {
+      greeting: 'Hey! Tell me what you need and I will prepare a draft for you.',
       expense: 'Got it. Review the expense draft and confirm to save it:',
       task: 'Got it. Review the task draft and confirm to save it:',
       habit: 'Habit creation is coming in a later phase. For now I can save expenses and tasks.',
       summary: 'I cannot generate summaries yet. For now I can log expenses and create tasks.',
+      summaryWithData:
+        'This week: {{pending}} pending tasks ({{high}} high priority), {{completed}} completed. Expenses: {{expenses}} for ${{spent}}. Habits today: {{habitsDone}}/{{habits}}.',
+      summaryTopCategory: 'Your top expense category was {{top}}.',
       generic:
         'I could not detect an action in "{{text}}". Try "Spent $15 on coffee" or "Remind me to pay internet tomorrow".',
       defaultExpenseTitle: 'Quick expense',
       defaultTaskTitle: 'New task',
+      localFallback: 'AI was unavailable, so I used the on-device detector.',
+      multipleDetected: 'I found {{count}} separate actions. How should I prepare them?',
     },
     errors: {
       invalidAmount: 'I could not detect a valid expense amount.',
@@ -489,6 +495,14 @@ export const en = {
       saveTask: 'The task could not be saved. Please try again.',
       saveHistory: 'The chat history could not be saved.',
       loadHistory: 'The chat history could not be loaded.',
+      detectIntent: 'I could not understand that message. Please try again.',
+    },
+    choice: {
+      badge: '{{count}} actions detected',
+      question: 'Create them individually or as one task?',
+      individual: 'Individual',
+      unified: 'One task',
+      untitled: '(untitled)',
     },
     actionPreview: {
       expenseBadge: 'Expense ready to save',
